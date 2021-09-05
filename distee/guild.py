@@ -13,12 +13,13 @@ class Member(User):
     def __init__(self, **data):
         super(Member, self).__init__(**data.get('user'), _client=data.get('_client'))
         self.nick: Optional[str] = data.get('nick')
-        self.roles: List[Snowflake] = [Snowflake(id=x) for x in data.get('roles')]  # FIXME port to role object
+        self.roles: Dict[int, Role] = {}  # FIXME port to role object
         self.joined_at = data.get('joined_at')  # FIXME port to datetime
         self.premium_since: Optional[str] = data.get('premium_since')
         self.deaf: bool = data.get('deaf')
         self.mute: bool = data.get('mute')
         self.pending: Optional[bool] = data.get('pending')
+        self.guild: Guild = data.get('_guild')
 
 
 class Guild(Snowflake):
@@ -86,7 +87,7 @@ class Guild(Snowflake):
         self.stickers = []  # FIXME parse stickers
         self._members: Dict[int, Member] = {}
         for m_d in kwargs.get('members', []):
-            m = Member(**m_d, _client=self._client)
+            m = Member(**m_d, _client=self._client, _guild=self)
             self._members[m.id] = m
             if self._client is not None:
                 self._client.add_user_to_cache(m_d.get('user'))

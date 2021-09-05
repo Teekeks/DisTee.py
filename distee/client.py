@@ -12,7 +12,7 @@ from .errors import ClientException, ReconnectWebSocket, ConnectionClosed
 from .message import Message
 from .utils import Snowflake
 from .flags import Intents
-from .guild import Guild
+from .guild import Guild, Member
 
 
 def _cancel_tasks(loop: asyncio.AbstractEventLoop) -> None:
@@ -69,6 +69,7 @@ class Client:
         self.intents: Intents = None
         self.register_raw_gateway_event_listener('MESSAGE_CREATE', self._on_message)
         self.register_raw_gateway_event_listener('GUILD_CREATE', self._on_guild_create)
+        self.register_raw_gateway_event_listener('GUILD_MEMBER_ADD', self._on_member_join)
 
     def is_closed(self) -> bool:
         """Returns whether or not this client is closing down"""
@@ -95,6 +96,15 @@ class Client:
         events = self._event_listener.get('message', [])
         for event in events:
             await event(msg)
+
+    async def _on_member_join(self, data: dict):
+        gid = int(data.get('guild_id'))
+        guild = self.get_guild(gid)
+        member = Member(**data, _client=self, _guild=guild)
+        guild._members[member.id] = member
+        self.add_user_to_cache(data)
+        for event in self._event_listener.get('member_join', []):
+            await event(member)
 
     async def _on_guild_create(self, data: dict):
         g = Guild(**data, _client=self)
