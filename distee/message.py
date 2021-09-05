@@ -9,11 +9,11 @@ class Message(Snowflake):
 
     def __init__(self, **args):
         super(Message, self).__init__(**args)
-        self.content = args.get('content')
-        self.guild_id = Snowflake(id=args.get('guild_id'))
-        self.channel_id = Snowflake(id=args.get('channel_id'))
-        self.author_id = Snowflake(id=args.get('author', {}).get('id'))
-        self.pinned = args.get('pinned')
+        self.content: str = args.get('content')
+        self.guild_id: Snowflake = Snowflake(id=args.get('guild_id'))
+        self.channel_id: Snowflake = Snowflake(id=args.get('channel_id'))
+        self.author_id: Snowflake = Snowflake(id=args.get('author', {}).get('id'))
+        self.pinned: bool = args.get('pinned')
         self.flags = args.get('flags')
 
         self.guild: Optional[Guild] = self._client.get_guild(self.guild_id) if self._client is not None else None
