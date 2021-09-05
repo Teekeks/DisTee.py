@@ -1,0 +1,216 @@
+import asyncio
+import logging
+import signal
+from typing import Callable, Awaitable, Optional, Union
+
+import aiohttp
+
+from .gateway import DiscordWebSocket
+from .user import User
+from .http import HTTPClient, Route
+from .errors import ClientException, ReconnectWebSocket, ConnectionClosed
+from .message import Message
+from .utils import Snowflake
+from .flags import Intents
+from .guild import Guild
+
+
+def _cancel_tasks(loop: asyncio.AbstractEventLoop) -> None:
+    tasks = {t for t in asyncio.all_tasks(loop=loop) if not t.done()}
+
+    if not tasks:
+        return
+
+    logging.info('Cleaning up after %d tasks.', len(tasks))
+    for task in tasks:
+        task.cancel()
+
+    loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
+    logging.info('All tasks finished cancelling.')
+
+    for task in tasks:
+        if task.cancelled():
+            continue
+        if task.exception() is not None:
+            loop.call_exception_handler({
+                'message': 'Unhandled exception during Client.run shutdown.',
+                'exception': task.exception(),
+                'task': task
+            })
+
+
+def _cleanup_loop(loop: asyncio.AbstractEventLoop) -> None:
+    try:
+        _cancel_tasks(loop)
+        loop.run_until_complete(loop.shutdown_asyncgens())
+    finally:
+        logging.info('Closing the event loop.')
+        loop.close()
+
+
+class Client:
+
+    ws: DiscordWebSocket = None
+    user: User = None
+    http: HTTPClient
+    loop = None
+    _closed = False
+    _raw_gateway_listener = {}
+    _event_listener = {}
+    _guilds = {}
+    _users = {}
+    messages = []
+    message_cache_size: int = 10
+
+    def __init__(self):
+        self.ws = None
+        self.http = HTTPClient()
+        self.loop = asyncio.get_event_loop()
+        self.intents: Intents = None
+        self.register_raw_gateway_event_listener('MESSAGE_CREATE', self._on_message)
+        self.register_raw_gateway_event_listener('GUILD_CREATE', self._on_guild_create)
+
+    def is_closed(self) -> bool:
+        """Returns whether or not this client is closing down"""
+        return self._closed
+
+    async def login(self, token):
+        data = await self.http.do_login(token)
+        if data is None:
+            raise ClientException('Failed to log in')
+        self.user = User(**data)
+        logging.debug(f'Logged in as user {self.user.username}#{self.user.discriminator}')
+
+    async def _on_message(self, data: dict):
+        # lets check if we know that user
+        if self._users.get(data.get('author').get('id')) is None:
+            usr = User(**data.get('author'))
+            self._users[usr.id] = usr
+        msg = Message(**data, _client=self)
+        # add to cache
+        self.messages.append(msg)
+        if len(self.messages) > self.message_cache_size:
+            self.messages.pop(0)
+        # call on_message event
+        events = self._event_listener.get('message', [])
+        for event in events:
+            await event(msg)
+
+    async def _on_guild_create(self, data: dict):
+        g = Guild(**data, _client=self)
+        self._guilds[g.id] = g
+
+    async def dispatch_gateway_event(self, event: str, data: dict):
+        events = self._raw_gateway_listener.get(event)
+        if events is None:
+            return
+        for event in events:
+            await event(data)
+
+    def register_raw_gateway_event_listener(self, event_name: str, listener: Callable[[dict], Awaitable[None]]):
+        if event_name not in self._raw_gateway_listener.keys():
+            self._raw_gateway_listener[event_name] = []
+        self._raw_gateway_listener[event_name].append(listener)
+
+    async def connect(self):
+        """establish web socket connection and let websocket listen for stuff"""
+        self.ws = DiscordWebSocket(self)
+        resume = False
+        while not self.is_closed():
+            try:
+                await self.ws.run(resume=resume)
+            except ReconnectWebSocket:
+                logging.info(f'Trying to resume session...')
+                resume = True
+            except (ConnectionClosed,
+                    OSError,
+                    aiohttp.ClientError,
+                    asyncio.TimeoutError):
+                if self.is_closed():
+                    return
+            except asyncio.exceptions.CancelledError:
+                await self.close()
+            except:
+                logging.exception('unhandled exception, lets try a reconnect')
+                await self.close()
+
+    async def start(self, token: str):
+        await self.login(token)
+        await self.connect()
+
+    async def close(self):
+        if self._closed:
+            return
+        self._closed = True
+        await self.http.close()
+        await self.ws.close()
+
+    def run(self, token: str, intents: Intents = Intents.default()):
+        self._closed = False
+        self.intents = intents
+        loop = self.loop
+        try:
+            loop.add_signal_handler(signal.SIGINT, lambda: loop.stop())
+            loop.add_signal_handler(signal.SIGTERM, lambda: loop.stop())
+        except NotImplementedError:
+            pass
+
+        async def runner():
+
+            try:
+                await self.start(token)
+            finally:
+                if not self.is_closed():
+                    print('1')
+                    await self.close()
+
+        def stop_loop_on_completion(f):
+            loop.stop()
+
+        future = asyncio.ensure_future(runner(), loop=self.loop)
+        future.add_done_callback(stop_loop_on_completion)
+        try:
+            self.loop.run_forever()
+        except KeyboardInterrupt:
+            logging.info('shutting down due to keyboard interrupt.')
+        finally:
+            future.remove_done_callback(stop_loop_on_completion)
+            print('cleanup loop')
+            _cleanup_loop(self.loop)
+        if not future.cancelled():
+            try:
+                return future.result()
+            except KeyboardInterrupt:
+                return None
+
+    def event(self, name: str):
+        def decorator(func):
+            if self._event_listener.get(name) is None:
+                self._event_listener[name] = []
+            self._event_listener[name].append(func)
+            return func
+
+        return decorator
+
+    def raw_event(self, name: str):
+        def decorator(func):
+            self.register_raw_gateway_event_listener(name, func)
+            return func
+        return decorator
+
+    async def fetch_user(self, uid: Snowflake) -> User:
+        data = await self.http.request(Route('GET', f'/users/{uid.id}'))
+        return User(**data)
+
+    def get_guild(self, s: Union[Snowflake, int]) -> Optional[Guild]:
+        return self._guilds.get(s.id if isinstance(s, Snowflake) else s)
+
+    def get_user(self, s: Union[Snowflake, int]) -> Optional[User]:
+        return self._users.get(s.id if isinstance(s, Snowflake) else s)
+
+    def add_user_to_cache(self, user: Union[User, dict]):
+        """Adds a user to the local cache."""
+        if isinstance(user, dict):
+            user = User(**user, _client=self)
+        if self._users.get(user.id) is None:
+            self._users[user.id] = user
