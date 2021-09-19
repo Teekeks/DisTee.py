@@ -49,4 +49,12 @@ class ApplicationCommand(Snowflake):
         self.version: Snowflake = Snowflake(id=data.get('version'))
         self.options = [ApplicationCommandOption(**d) for d in data.get('options')] \
             if data.get('options') is not None else None
+        self.callback = data.get('_callback')
+
+    def get_json_data(self):
+        return {
+            'name': self.name,
+            'description': self.description,
+            'type': self.type.value
+        }
 

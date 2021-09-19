@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import signal
-from typing import Callable, Awaitable, Optional, Union, List
+from typing import Callable, Awaitable, Optional, Union, List, TypedDict, Dict
 
 import aiohttp
 
@@ -15,6 +15,7 @@ from .flags import Intents
 from .guild import Guild, Member
 from .application_command import ApplicationCommand
 from .application import Application
+from .interaction import Interaction
 
 
 def _cancel_tasks(loop: asyncio.AbstractEventLoop) -> None:
@@ -63,6 +64,7 @@ class Client:
     _users = {}
     messages = []
     message_cache_size: int = 10
+    _application_commands: Dict[int, ApplicationCommand] = {}
 
     def __init__(self):
         self.ws = None
@@ -74,6 +76,7 @@ class Client:
         self.register_raw_gateway_event_listener('GUILD_CREATE', self._on_guild_create)
         self.register_raw_gateway_event_listener('GUILD_MEMBER_ADD', self._on_member_join)
         self.register_raw_gateway_event_listener('READY', self._on_ready)
+        self.register_raw_gateway_event_listener('INTERACTION_CREATE', self._on_interaction_create)
 
     def is_closed(self) -> bool:
         """Returns whether or not this client is closing down"""
@@ -100,6 +103,18 @@ class Client:
         events = self._event_listener.get('message', [])
         for event in events:
             await event(msg)
+
+    async def _on_interaction_create(self, data: dict):
+        interaction = Interaction(**data, _client=self)
+        _id = interaction.data.id
+        ac = self._application_commands.get(_id)
+        if ac is None:
+            logging.error(f'could not find callback for command {interaction.data.name} ({_id})')
+            return
+        await ac.callback(interaction)
+        # lets respond
+        await self.http.request(Route('POST', f'/interactions/{interaction.id}/{interaction.token}/callback'),
+                                json=interaction.response.get_json_data())
 
     async def _on_ready(self, data: dict):
         for event in self._event_listener.get('ready', []):
@@ -244,7 +259,18 @@ class Client:
         data = await self.http.request(Route('GET', f'/applications/{self.application.id}/commands'))
         return [ApplicationCommand(**d) for d in data]
 
-    async def register_global_command(self,
-                                      name: str,
-                                      command_type):
-        pass
+    async def fetch_guild_application_commands(self, gid: int) -> List[ApplicationCommand]:
+        data = await self.http.request(Route('GET', f'/applications/{self.application.id}/guilds/{gid}/commands'))
+        return [ApplicationCommand(**d) for d in data]
+
+    async def register_command(self,
+                               ap: ApplicationCommand,
+                               callback,
+                               is_global: bool,
+                               guilds: Union[int, None, List[int]]):
+        data = await self.http.request(Route('POST',
+                                             f'/applications/{self.application.id}/guilds/{guilds}/commands'),
+                                       json=ap.get_json_data())
+        ap = ApplicationCommand(**data, _callback=callback)
+        self._application_commands[ap.id] = ap
+        return ap

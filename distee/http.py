@@ -77,6 +77,10 @@ class HTTPClient:
 
         kwargs['headers'] = headers
 
+        if 'json' in kwargs:
+            headers['Content-Type'] = 'application/json'
+            kwargs['data'] = json.dumps(kwargs.pop('json'))
+
         if form is not None:
             form_data = aiohttp.FormData()
             for p in form:
