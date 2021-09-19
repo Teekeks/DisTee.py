@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import signal
-from typing import Callable, Awaitable, Optional, Union
+from typing import Callable, Awaitable, Optional, Union, List
 
 import aiohttp
 
@@ -13,6 +13,8 @@ from .message import Message
 from .utils import Snowflake
 from .flags import Intents
 from .guild import Guild, Member
+from .application_command import ApplicationCommand
+from .application import Application
 
 
 def _cancel_tasks(loop: asyncio.AbstractEventLoop) -> None:
@@ -67,9 +69,11 @@ class Client:
         self.http = HTTPClient()
         self.loop = asyncio.get_event_loop()
         self.intents: Intents = None
+        self.application: Application = None
         self.register_raw_gateway_event_listener('MESSAGE_CREATE', self._on_message)
         self.register_raw_gateway_event_listener('GUILD_CREATE', self._on_guild_create)
         self.register_raw_gateway_event_listener('GUILD_MEMBER_ADD', self._on_member_join)
+        self.register_raw_gateway_event_listener('READY', self._on_ready)
 
     def is_closed(self) -> bool:
         """Returns whether or not this client is closing down"""
@@ -96,6 +100,11 @@ class Client:
         events = self._event_listener.get('message', [])
         for event in events:
             await event(msg)
+
+    async def _on_ready(self, data: dict):
+        for event in self._event_listener.get('ready', []):
+            await event()
+        pass
 
     async def _on_member_join(self, data: dict):
         gid = int(data.get('guild_id'))
@@ -146,6 +155,7 @@ class Client:
 
     async def start(self, token: str):
         await self.login(token)
+        await self.fetch_bot_application_information()
         await self.connect()
 
     async def close(self):
@@ -224,3 +234,17 @@ class Client:
             user = User(**user, _client=self)
         if self._users.get(user.id) is None:
             self._users[user.id] = user
+
+    async def fetch_bot_application_information(self):
+        data = await self.http.request(Route('GET', '/oauth2/applications/@me'))
+        self.application = Application(**data)
+        return self.application
+
+    async def fetch_global_application_commands(self) -> List[ApplicationCommand]:
+        data = await self.http.request(Route('GET', f'/applications/{self.application.id}/commands'))
+        return [ApplicationCommand(**d) for d in data]
+
+    async def register_global_command(self,
+                                      name: str,
+                                      command_type):
+        pass

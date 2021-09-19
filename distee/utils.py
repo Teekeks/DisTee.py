@@ -17,7 +17,7 @@ class Snowflake:
 
     def __init__(self, **args):
         self.id: int = int(args.get('id'))
-        self._client: 'Client' = args.get('_client')
+        self._client: Client = args.get('_client')
 
     def __eq__(self, other):
         if isinstance(other, Snowflake):
