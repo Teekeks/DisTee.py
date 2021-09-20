@@ -27,9 +27,19 @@ class ApplicationCommandOption:
         self.description = data.get('description')
         self.required = data.get('required')
         self.options = [ApplicationCommandOption(**d) for d in data.get('options')] \
-            if data.get('options') is not None else None
+            if data.get('options') is not None else []
         self.choices = [ApplicationCommandOptionChoice(**d) for d in data.get('choices')] \
-            if data.get('choices') is not None else None
+            if data.get('choices') is not None else []
+
+    def get_json_data(self):
+        return {
+            'type': self.type.value,
+            'name': self.name,
+            'description': self.description,
+            'required': self.required,
+            'options': [d.get_json_data() for d in self.options],
+            'choices': [{'name': d.name, 'value': d.value} for d in self.choices]
+        }
 
 
 class ApplicationCommand(Snowflake):
@@ -48,13 +58,14 @@ class ApplicationCommand(Snowflake):
         self.default_permission: bool = data.get('default_permission', True)
         self.version: Snowflake = Snowflake(id=data.get('version'))
         self.options = [ApplicationCommandOption(**d) for d in data.get('options')] \
-            if data.get('options') is not None else None
+            if data.get('options') is not None else []
         self.callback = data.get('_callback')
 
     def get_json_data(self):
         return {
             'name': self.name,
             'description': self.description,
-            'type': self.type.value
+            'type': self.type.value,
+            'options': [d.get_json_data() for d in self.options]
         }
 

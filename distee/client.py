@@ -12,6 +12,7 @@ from .errors import ClientException, ReconnectWebSocket, ConnectionClosed
 from .message import Message
 from .utils import Snowflake
 from .flags import Intents
+from .enums import InteractionType
 from .guild import Guild, Member
 from .application_command import ApplicationCommand
 from .application import Application
@@ -65,6 +66,7 @@ class Client:
     messages = []
     message_cache_size: int = 10
     _application_commands: Dict[int, ApplicationCommand] = {}
+    _interaction_handler: Dict[str, Callable] = {}
 
     def __init__(self):
         self.ws = None
@@ -105,16 +107,28 @@ class Client:
             await event(msg)
 
     async def _on_interaction_create(self, data: dict):
-        interaction = Interaction(**data, _client=self)
-        _id = interaction.data.id
-        ac = self._application_commands.get(_id)
-        if ac is None:
-            logging.error(f'could not find callback for command {interaction.data.name} ({_id})')
-            return
-        await ac.callback(interaction)
-        # lets respond
-        await self.http.request(Route('POST', f'/interactions/{interaction.id}/{interaction.token}/callback'),
-                                json=interaction.response.get_json_data())
+        try:
+            interaction = Interaction(**data, _client=self)
+            _id = interaction.data.id
+            if interaction.type == InteractionType.APPLICATION_COMMAND:
+                ac = self._application_commands.get(_id)
+                if ac is None:
+                    logging.error(f'could not find callback for command {interaction.data.name} ({_id})')
+                    return
+                await ac.callback(interaction)
+                # lets respond
+                await self.http.request(Route('POST', f'/interactions/{interaction.id}/{interaction.token}/callback'),
+                                        json=interaction.response.get_json_data())
+            elif interaction.type == InteractionType.MESSAGE_COMPONENT:
+                ac = self._interaction_handler.get(interaction.data.custom_id)
+                if ac is None:
+                    logging.exception(f'could not find handler for interaction with custom id {interaction.data.custom_id}')
+                    return
+                await ac(interaction)
+                await self.http.request(Route('POST', f'/interactions/{interaction.id}/{interaction.token}/callback'),
+                                        json=interaction.response.get_json_data())
+        except:
+            logging.exception('Exception while handling interaction:')
 
     async def _on_ready(self, data: dict):
         for event in self._event_listener.get('ready', []):
@@ -218,6 +232,10 @@ class Client:
             except KeyboardInterrupt:
                 return None
 
+########################################################################################################################
+# Decorator
+########################################################################################################################
+
     def event(self, name: str):
         def decorator(func):
             if self._event_listener.get(name) is None:
@@ -232,6 +250,17 @@ class Client:
             self.register_raw_gateway_event_listener(name, func)
             return func
         return decorator
+
+    def interaction_handler(self,
+                            custom_id: Optional[str] = None):
+        def decorator(func):
+            self._interaction_handler[custom_id] = func
+            return func
+        return decorator
+
+########################################################################################################################
+# Fetcher
+########################################################################################################################
 
     async def fetch_user(self, uid: Snowflake) -> User:
         data = await self.http.request(Route('GET', f'/users/{uid.id}'))
@@ -263,6 +292,10 @@ class Client:
         data = await self.http.request(Route('GET', f'/applications/{self.application.id}/guilds/{gid}/commands'))
         return [ApplicationCommand(**d) for d in data]
 
+########################################################################################################################
+# Command registration
+########################################################################################################################
+
     async def register_command(self,
                                ap: ApplicationCommand,
                                callback,
@@ -274,3 +307,4 @@ class Client:
         ap = ApplicationCommand(**data, _callback=callback)
         self._application_commands[ap.id] = ap
         return ap
+

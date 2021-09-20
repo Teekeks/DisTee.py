@@ -59,6 +59,12 @@ class ApplicationCommandType(IntEnum):
     MESSAGE = 3
 
 
+class ComponentType(IntEnum):
+    ACTION_ROW = 1
+    BUTTON = 2
+    SELECT_MENU = 3
+
+
 class ApplicationCommandOptionType(IntEnum):
     SUB_COMMAND = 1
     SUB_COMMAND_GROUP = 2
