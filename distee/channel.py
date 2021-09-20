@@ -68,6 +68,11 @@ class TextChannel(GuildChannel, MessageableChannel):
             if data.get('last_message_id') is not None else None
         self.default_auto_archive_duration: int = data.get('default_auto_archive_duration')
 
+    async def change_topic(self, new_topic: str):
+        c_d = await self._client.http.request(Route('PATCH', f'/channels/{self.id}'), json={'topic': new_topic})
+        # TODO: handle errors
+        self.topic = new_topic
+
 
 class VoiceChannel(GuildChannel):
 
