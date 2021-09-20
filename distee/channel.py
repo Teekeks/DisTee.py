@@ -45,7 +45,8 @@ class MessageableChannel(BaseChannel):
                    content: str = None,
                    tts: bool = False,
                    reply_to: 'Message' = None,
-                   embeds: Optional[List[dict]] = None) -> 'Message':
+                   embeds: Optional[List[dict]] = None,
+                   components: Optional[List] = None) -> 'Message':
         payload = {'tts': tts}
         form = []
         if content is not None:
@@ -54,6 +55,8 @@ class MessageableChannel(BaseChannel):
             payload['message_reference'] = self._get_reference(reply_to)
         if embeds is not None:
             payload['embeds'] = embeds
+        if components is not None:
+            payload['components'] = components
         form.append({'name': 'payload_json', 'value': json.dumps(payload)})
         await self._client.http.request(Route('POST', f'/channels/{self.id}/messages'), form=form)
 
