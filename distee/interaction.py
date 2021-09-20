@@ -56,6 +56,7 @@ class InteractionData(Snowflake):
             if data.get('component_type') is not None else None
         self.custom_id: Optional[str] = data.get('custom_id')
         self.values: Optional[List] = data.get('values')
+        self.options: Optional[List] = data.get('options')
         res = data.get('resolved')
         self.messages: List[Message] = [Message(**d, _client=self._client) for d in
                                         res.get('messages').values()] \
