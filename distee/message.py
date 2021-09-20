@@ -24,5 +24,9 @@ class Message(Snowflake):
         if self.author is None and self._client is not None:
             self.author = self._client.get_user(self.author_id)
 
+    @property
+    def jump_url(self):
+        return f'https://discord.com/channels/{self.guild_id.id}/{self.channel_id.id}/{self.id}'
+
     async def reply(self):
         pass
