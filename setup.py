@@ -12,7 +12,8 @@ packages = [
 
 setup(name='distee.py',
       author='Teekeks',
-      licanse='MIT',
+      license='MIT',
       description='A Discord API wrapper',
       install_requirements=requirements,
-      python_requires='>=3.9.0')
+      python_requires='>=3.9.0',
+      packages=packages)
