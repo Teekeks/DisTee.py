@@ -3,7 +3,7 @@ from typing import Optional, List, Dict, Union
 from .enums import GuildVerificationLevel, MessageNotificationLevel, ExplicitContentFilterLevel, MFALevel, PremiumTier
 from .enums import GuildNSFWLevel
 from .flags import SystemChannelFlags
-from .channel import GuildChannel, get_channel
+from .channel import GuildChannel, get_channel, TextChannel, VoiceChannel, Category
 from .user import User
 from .role import Role
 
@@ -92,7 +92,7 @@ class Guild(Snowflake):
             if self._client is not None:
                 self._client.add_user_to_cache(m_d.get('user'))
 
-    def get_channel(self, channel_id: Union[Snowflake, int]) -> Optional[GuildChannel]:
+    def get_channel(self, channel_id: Union[Snowflake, int]) -> Optional[Union[GuildChannel, TextChannel, VoiceChannel, Category]]:
         """Get Channel Object from cache if found, otherwise returns None"""
         return self._channels.get(channel_id.id if isinstance(channel_id, Snowflake) else channel_id)
 
