@@ -89,3 +89,5 @@ class Interaction(Snowflake):
         self.data: Optional[InteractionData] = InteractionData(**data.get('data'), _client=self._client) \
             if data.get('data') is not None else None
         self.response: InteractionResponse = InteractionResponse()
+        self.message: Optional[Message] = Message(**data.get('message'), _client=self._client) \
+            if data.get('message') is not None else None
