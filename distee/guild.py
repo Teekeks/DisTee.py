@@ -63,7 +63,7 @@ class Guild(Snowflake):
         self.member_count: Optional[int] = kwargs.get('member_count')
         self._channels: Dict[int, GuildChannel] = {}
         for cd in kwargs.get('channels', []):
-            c = get_channel(**cd, _client=self._client)
+            c = get_channel(**cd, _client=self._client, guild_id=self.id)
             self._channels[c.id] = c
         self.threads = []  # FIXME parse threads
         # FIXME parse presences
