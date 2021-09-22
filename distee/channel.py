@@ -58,7 +58,10 @@ class MessageableChannel(BaseChannel):
         if components is not None:
             payload['components'] = components
         form.append({'name': 'payload_json', 'value': json.dumps(payload)})
-        await self._client.http.request(Route('POST', f'/channels/{self.id}/messages'), form=form)
+        gid = None
+        if isinstance(self, GuildChannel):
+            gid = self.guild_id.id
+        await self._client.http.request(Route('POST', f'/channels/{self.id}/messages', channel_id=self.id, guild_id=gid), form=form)
 
 
 class TextChannel(GuildChannel, MessageableChannel):
@@ -72,7 +75,11 @@ class TextChannel(GuildChannel, MessageableChannel):
         self.default_auto_archive_duration: int = data.get('default_auto_archive_duration')
 
     async def change_topic(self, new_topic: str):
-        c_d = await self._client.http.request(Route('PATCH', f'/channels/{self.id}'), json={'topic': new_topic})
+        c_d = await self._client.http.request(Route('PATCH',
+                                                    f'/channels/{self.id}',
+                                                    channel_id=self.id,
+                                                    guild_id=self.guild_id.id),
+                                              json={'topic': new_topic})
         # TODO: handle errors
         self.topic = new_topic
 

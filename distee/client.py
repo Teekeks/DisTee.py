@@ -289,7 +289,9 @@ class Client:
         return [ApplicationCommand(**d) for d in data]
 
     async def fetch_guild_application_commands(self, gid: int) -> List[ApplicationCommand]:
-        data = await self.http.request(Route('GET', f'/applications/{self.application.id}/guilds/{gid}/commands'))
+        data = await self.http.request(Route('GET',
+                                             f'/applications/{self.application.id}/guilds/{gid}/commands',
+                                             guild_id=gid))
         return [ApplicationCommand(**d) for d in data]
 
 ########################################################################################################################
@@ -302,7 +304,8 @@ class Client:
                                is_global: bool,
                                guilds: Union[int, None, List[int]]):
         data = await self.http.request(Route('POST',
-                                             f'/applications/{self.application.id}/guilds/{guilds}/commands'),
+                                             f'/applications/{self.application.id}/guilds/{guilds}/commands',
+                                             guild_id=guilds),
                                        json=ap.get_json_data())
         ap = ApplicationCommand(**data, _callback=callback)
         self._application_commands[ap.id] = ap
