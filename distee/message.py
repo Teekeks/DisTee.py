@@ -59,5 +59,5 @@ class Message(Snowflake):
         if components is not None:
             payload['components'] = components
         form.append({'name': 'payload_json', 'value': json.dumps(payload)})
-        data = await self._client.http.request(Route('PATCH', f'/channels/{self.id}/messages/{self.id}'), form=form)
+        data = await self._client.http.request(Route('PATCH', f'/channels/{self.channel_id.id}/messages/{self.id}'), form=form)
         return Message(**data, _client=self._client)
