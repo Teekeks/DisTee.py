@@ -67,6 +67,7 @@ class Client:
     message_cache_size: int = 10
     _application_commands: Dict[int, ApplicationCommand] = {}
     _interaction_handler: Dict[str, Callable] = {}
+    _command_registrar: List[Dict] = []
 
     def __init__(self):
         self.ws = None
@@ -90,6 +91,10 @@ class Client:
             raise ClientException('Failed to log in')
         self.user = User(**data)
         logging.debug(f'Logged in as user {self.user.username}#{self.user.discriminator}')
+
+########################################################################################################################
+# EVENT HOOKS
+########################################################################################################################
 
     async def _on_message(self, data: dict):
         # lets check if we know that user
@@ -147,6 +152,23 @@ class Client:
     async def _on_guild_create(self, data: dict):
         g = Guild(**data, _client=self)
         self._guilds[g.id] = g
+        # register server specific commands on join
+        for c in self._command_registrar:
+            gf = c.get('guild_filter')
+            if gf is None or \
+                    (isinstance(gf, int) and gf == g.id) or \
+                    (isinstance(gf, list) and g.id in gf):
+                ap = c.get('ap')
+                data = await self.http.request(Route('POST',
+                                                     f'/applications/{self.application.id}/guilds/{g.id}/commands',
+                                                     guild_id=g.id),
+                                               json=ap.get_json_data())
+                ap = ApplicationCommand(**data, _callback=c.get('callback'))
+                self._application_commands[ap.id] = ap
+
+########################################################################################################################
+#
+########################################################################################################################
 
     async def dispatch_gateway_event(self, event: str, data: dict):
         events = self._raw_gateway_listener.get(event)
@@ -303,11 +325,17 @@ class Client:
                                callback,
                                is_global: bool,
                                guilds: Union[int, None, List[int]]):
-        data = await self.http.request(Route('POST',
-                                             f'/applications/{self.application.id}/guilds/{guilds}/commands',
-                                             guild_id=guilds),
-                                       json=ap.get_json_data())
-        ap = ApplicationCommand(**data, _callback=callback)
-        self._application_commands[ap.id] = ap
-        return ap
-
+        if is_global:
+            # register global command
+            data = await self.http.request(Route('POST',
+                                                 f'/applications/{self.application.id}/commands'),
+                                           json=ap.get_json_data())
+            ap = ApplicationCommand(**data, _callback=callback)
+            self._application_commands[ap.id] = ap
+        else:
+            # register internally for server specific
+            self._command_registrar.append({
+                'ap': ap,
+                'guild_filter': guilds,
+                'callback': callback
+            })
