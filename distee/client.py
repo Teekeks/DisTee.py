@@ -136,6 +136,16 @@ class Client:
             logging.exception('Exception while handling interaction:')
 
     async def _on_ready(self, data: dict):
+        # register global commands
+        for c in self._command_registrar:
+            if not c.get('global'):
+                continue
+            data = await self.http.request(Route('POST',
+                                                 f'/applications/{self.application.id}/commands'),
+                                           json=c.get('ap').get_json_data())
+            ap = ApplicationCommand(**data, _callback=c.get('callback'))
+            self._application_commands[ap.id] = ap
+        # call ready event
         for event in self._event_listener.get('ready', []):
             await event()
         pass
@@ -154,6 +164,8 @@ class Client:
         self._guilds[g.id] = g
         # register server specific commands on join
         for c in self._command_registrar:
+            if c.get('global'):
+                continue
             gf = c.get('guild_filter')
             if gf is None or \
                     (isinstance(gf, int) and gf == g.id) or \
@@ -320,22 +332,23 @@ class Client:
 # Command registration
 ########################################################################################################################
 
-    async def register_command(self,
-                               ap: ApplicationCommand,
-                               callback,
-                               is_global: bool,
-                               guilds: Union[int, None, List[int]]):
+    def register_command(self,
+                         ap: ApplicationCommand,
+                         callback,
+                         is_global: bool,
+                         guild_filter: Union[int, None, List[int]]):
         if is_global:
             # register global command
-            data = await self.http.request(Route('POST',
-                                                 f'/applications/{self.application.id}/commands'),
-                                           json=ap.get_json_data())
-            ap = ApplicationCommand(**data, _callback=callback)
-            self._application_commands[ap.id] = ap
+            self._command_registrar.append({
+                'ap': ap,
+                'callback': callback,
+                'global': True
+            })
         else:
             # register internally for server specific
             self._command_registrar.append({
                 'ap': ap,
-                'guild_filter': guilds,
+                'global': False,
+                'guild_filter': guild_filter,
                 'callback': callback
             })
