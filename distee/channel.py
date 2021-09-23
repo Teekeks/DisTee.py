@@ -46,7 +46,8 @@ class MessageableChannel(BaseChannel):
                    tts: bool = False,
                    reply_to: 'Message' = None,
                    embeds: Optional[List[dict]] = None,
-                   components: Optional[List] = None) -> 'Message':
+                   components: Optional[List] = None,
+                   allowed_mentions: Optional[dict] = None) -> 'Message':
         payload = {'tts': tts}
         form = []
         if content is not None:
@@ -57,6 +58,8 @@ class MessageableChannel(BaseChannel):
             payload['embeds'] = embeds
         if components is not None:
             payload['components'] = components
+        if allowed_mentions is not None:
+            payload['allowed_mentions'] = allowed_mentions
         form.append({'name': 'payload_json', 'value': json.dumps(payload)})
         gid = None
         if isinstance(self, GuildChannel):

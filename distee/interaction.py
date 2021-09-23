@@ -27,7 +27,8 @@ class InteractionResponse:
                 'flags': self.flags,
                 'tts': self.tts,
                 'components': self.components,
-                'embeds': self.embeds
+                'embeds': self.embeds,
+                'allowed_mentions': self.allowed_mentions
             }.items() if v is not None}
         }
 
