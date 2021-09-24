@@ -69,3 +69,11 @@ class Message(Snowflake):
                                                      guild_id=gid),
                                                form=form)
         return Message(**data, _client=self._client)
+
+    async def delete(self, reason: Optional[str] = None):
+        await self._client.http.request(Route('DELETE',
+                                              '/channels/{channel_id}/messages/{message_id}',
+                                              channel_id=self.channel_id,
+                                              guild_id=self.guild_id,
+                                              message_id=self.id),
+                                        reason=reason)

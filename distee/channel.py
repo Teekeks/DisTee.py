@@ -2,7 +2,7 @@ import json
 
 from .utils import Snowflake
 from .enums import ChannelType
-from typing import Optional, List
+from typing import Optional, List, Union
 from .http import Route
 
 
@@ -34,6 +34,7 @@ class Category(GuildChannel):
 
 
 class MessageableChannel(BaseChannel):
+    """Any channel that can contain text"""
 
     def _get_reference(self, msg: 'Message') -> dict:
         return {
@@ -66,8 +67,17 @@ class MessageableChannel(BaseChannel):
             gid = self.guild_id.id
         await self._client.http.request(Route('POST', f'/channels/{self.id}/messages', channel_id=self.id, guild_id=gid), form=form)
 
+    async def delete_message(self, msg_id: Union[Snowflake, int], reason: Optional[str] = None):
+        await self._client.http.request(Route('DELETE',
+                                              '/channels/{channel_id}/messages/{message_id}',
+                                              guild_id=self.guild_id if isinstance(self, GuildChannel) else None,
+                                              channel_id=self.id,
+                                              message_id=msg_id),
+                                        reason=reason)
+
 
 class TextChannel(GuildChannel, MessageableChannel):
+    """A Guild text channel"""
 
     def __init__(self, **data):
         super(TextChannel, self).__init__(**data)
