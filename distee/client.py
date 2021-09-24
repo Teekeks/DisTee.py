@@ -80,6 +80,7 @@ class Client:
         self.register_raw_gateway_event_listener('GUILD_MEMBER_ADD', self._on_member_join)
         self.register_raw_gateway_event_listener('READY', self._on_ready)
         self.register_raw_gateway_event_listener('INTERACTION_CREATE', self._on_interaction_create)
+        self.register_raw_gateway_event_listener('GUILD_DELETE', self._on_guild_delete)
 
     def is_closed(self) -> bool:
         """Returns whether or not this client is closing down"""
@@ -146,6 +147,8 @@ class Client:
             ap = ApplicationCommand(**data, _callback=c.get('callback'))
             self._application_commands[ap.id] = ap
         # call ready event
+        for g in data.get('guilds'):
+            self._guilds[int(g['id'])] = None
         for event in self._event_listener.get('ready', []):
             await event()
         pass
@@ -161,6 +164,10 @@ class Client:
 
     async def _on_guild_create(self, data: dict):
         g = Guild(**data, _client=self)
+        if g.id not in self._guilds.keys():
+            # new guild!
+            for event in self._event_listener.get('guild_joined', []):
+                await event(g)
         self._guilds[g.id] = g
         # register server specific commands on join
         for c in self._command_registrar:
@@ -177,6 +184,15 @@ class Client:
                                                json=ap.get_json_data())
                 ap = ApplicationCommand(**data, _callback=c.get('callback'))
                 self._application_commands[ap.id] = ap
+
+    async def _on_guild_delete(self, data: dict):
+        if data.get('unavailable') is None:
+            # we left the guild
+            g = self.get_guild(int(data.get('id')))
+            for event in self._event_listener.get('guild_left', []):
+                await event(g)
+            # remove from cache
+            self._guilds.pop(int(data.get('id')))
 
 ########################################################################################################################
 #
