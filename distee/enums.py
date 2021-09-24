@@ -1,4 +1,4 @@
-from enum import IntEnum
+from enum import IntEnum, Enum
 
 
 class GuildVerificationLevel(IntEnum):
@@ -90,3 +90,13 @@ class InteractionResponseType(IntEnum):
     DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE = 5
     DEFERRED_UPDATE_MESSAGE = 6
     UPDATE_MESSAGE = 7
+
+
+class Event(Enum):
+    READY = 'ready'
+
+    GUILD_JOINED = 'guild_joined'
+    GUILD_LEFT = 'guild_left'
+    MEMBER_JOINED = 'member_joined'
+
+    MESSAGE_SEND = 'message_send'

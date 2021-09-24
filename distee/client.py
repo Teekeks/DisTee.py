@@ -12,7 +12,7 @@ from .errors import ClientException, ReconnectWebSocket, ConnectionClosed
 from .message import Message
 from .utils import Snowflake
 from .flags import Intents
-from .enums import InteractionType
+from .enums import InteractionType, Event
 from .guild import Guild, Member
 from .application_command import ApplicationCommand
 from .application import Application
@@ -108,7 +108,7 @@ class Client:
         if len(self.messages) > self.message_cache_size:
             self.messages.pop(0)
         # call on_message event
-        events = self._event_listener.get('message', [])
+        events = self._event_listener.get(Event.MESSAGE_SEND.value, [])
         for event in events:
             await event(msg)
 
@@ -149,7 +149,7 @@ class Client:
         # call ready event
         for g in data.get('guilds'):
             self._guilds[int(g['id'])] = None
-        for event in self._event_listener.get('ready', []):
+        for event in self._event_listener.get(Event.READY.value, []):
             await event()
         pass
 
@@ -159,14 +159,14 @@ class Client:
         member = Member(**data, _client=self, _guild=guild)
         guild._members[member.id] = member
         self.add_user_to_cache(data)
-        for event in self._event_listener.get('member_join', []):
+        for event in self._event_listener.get(Event.MEMBER_JOINED.value, []):
             await event(member)
 
     async def _on_guild_create(self, data: dict):
         g = Guild(**data, _client=self)
         if g.id not in self._guilds.keys():
             # new guild!
-            for event in self._event_listener.get('guild_joined', []):
+            for event in self._event_listener.get(Event.GUILD_JOINED.value, []):
                 await event(g)
         self._guilds[g.id] = g
         # register server specific commands on join
@@ -189,7 +189,7 @@ class Client:
         if data.get('unavailable') is None:
             # we left the guild
             g = self.get_guild(int(data.get('id')))
-            for event in self._event_listener.get('guild_left', []):
+            for event in self._event_listener.get(Event.GUILD_LEFT.value, []):
                 await event(g)
             # remove from cache
             self._guilds.pop(int(data.get('id')))
@@ -286,11 +286,12 @@ class Client:
 # Decorator
 ########################################################################################################################
 
-    def event(self, name: str):
+    def event(self, name: Union[str, Event]):
         def decorator(func):
-            if self._event_listener.get(name) is None:
-                self._event_listener[name] = []
-            self._event_listener[name].append(func)
+            n = name.value if isinstance(name, Event) else name
+            if self._event_listener.get(n) is None:
+                self._event_listener[n] = []
+            self._event_listener[n].append(func)
             return func
 
         return decorator
