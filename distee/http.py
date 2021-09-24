@@ -109,6 +109,9 @@ class HTTPClient:
             'Authorization': f'Bot {self.token}'
         }
 
+        if kwargs.get('reason'):
+            headers['X-Audit-Log-Reason'] = kwargs.get('reason')
+
         kwargs['headers'] = headers
 
         if 'json' in kwargs:
