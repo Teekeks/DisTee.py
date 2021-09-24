@@ -1,7 +1,7 @@
 import asyncio
 import json
 from typing import Optional, Iterable, Dict, Any
-
+from .utils import Snowflake
 import aiohttp
 from aiohttp import ClientSession, ClientResponse
 from . import utils
@@ -26,8 +26,16 @@ class Route:
         self.method = method
         self.url = self.BASE_URL + self.path
 
+        if parameters:
+            for k, v in parameters.items():
+                self.url = self.url.replace('{'+k+'}', v.id if isinstance(v, Snowflake) else str(v))
+
         self.channel_id = parameters.get('channel_id')
+        if isinstance(self.channel_id, Snowflake):
+            self.channel_id = self.channel_id.id
         self.guild_id = parameters.get('guild_id')
+        if isinstance(self.guild_id, Snowflake):
+            self.guild_id = self.guild_id.id
 
     @property
     def bucket(self):
