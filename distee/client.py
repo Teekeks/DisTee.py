@@ -202,11 +202,14 @@ class Client:
 ########################################################################################################################
 
     async def dispatch_gateway_event(self, event: str, data: dict):
-        events = self._raw_gateway_listener.get(event)
-        if events is None:
-            return
-        for event in events:
-            await event(data)
+        try:
+            events = self._raw_gateway_listener.get(event)
+            if events is None:
+                return
+            for event in events:
+                await event(data)
+        except:
+            logging.exception('gateway event handling failed')
 
     def register_raw_gateway_event_listener(self, event_name: str, listener: Callable[[dict], Awaitable[None]]):
         if event_name not in self._raw_gateway_listener.keys():
