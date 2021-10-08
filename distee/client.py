@@ -144,6 +144,8 @@ class Client:
             data = await self.http.request(Route('POST',
                                                  f'/applications/{self.application.id}/commands'),
                                            json=c.get('ap').get_json_data())
+            from pprint import pprint
+            pprint(data)
             ap = ApplicationCommand(**data, _callback=c.get('callback'))
             self._application_commands[ap.id] = ap
         # call ready event
