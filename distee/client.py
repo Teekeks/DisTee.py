@@ -141,7 +141,7 @@ class Client:
                                  coms: List[ApplicationCommand]) -> Optional[ApplicationCommand]:
             for com in coms:
                 # FIXME: also check if options match
-                if com.type == _ap.type and com.name == _ap.name and com.description == _ap.description:
+                if com.type == _ap.type and com.name == _ap.name:
                     return com
             return None
 
