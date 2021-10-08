@@ -351,18 +351,18 @@ class Client:
 
     async def fetch_bot_application_information(self):
         data = await self.http.request(Route('GET', '/oauth2/applications/@me'))
-        self.application = Application(**data)
+        self.application = Application(**data, _client=self)
         return self.application
 
     async def fetch_global_application_commands(self) -> List[ApplicationCommand]:
         data = await self.http.request(Route('GET', f'/applications/{self.application.id}/commands'))
-        return [ApplicationCommand(**d) for d in data]
+        return [ApplicationCommand(**d, _client=self) for d in data]
 
     async def fetch_guild_application_commands(self, gid: int) -> List[ApplicationCommand]:
         data = await self.http.request(Route('GET',
                                              f'/applications/{self.application.id}/guilds/{gid}/commands',
                                              guild_id=gid))
-        return [ApplicationCommand(**d) for d in data]
+        return [ApplicationCommand(**d, _client=self) for d in data]
 
 ########################################################################################################################
 # Command registration
