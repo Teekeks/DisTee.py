@@ -134,7 +134,7 @@ class DiscordWebSocket:
                 logging.info(f'fully resumed session {self.session_id}')
             else:
                 logging.debug(f'got event: {event} (data: {str(data)})')
-            await self.client.dispatch_gateway_event(event, data)
+            self.loop.create_task(self.client.dispatch_gateway_event(event, data))
         pass
 
     async def close(self):
