@@ -159,6 +159,7 @@ class Client:
                 ap = ApplicationCommand(**data, _callback=c.get('callback'))
                 self._application_commands[ap.id] = ap
             else:
+                logging.info(f'global command {m.name} is already registered')
                 self._application_commands[m.id] = m
         # call ready event
         for g in data.get('guilds', []):
