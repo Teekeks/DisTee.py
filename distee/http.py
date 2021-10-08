@@ -28,7 +28,7 @@ class Route:
 
         if parameters:
             for k, v in parameters.items():
-                self.url = self.url.replace('{'+k+'}', v.id if isinstance(v, Snowflake) else str(v))
+                self.url = self.url.replace('{'+k+'}', str(v.id) if isinstance(v, Snowflake) else str(v))
 
         self.channel_id = parameters.get('channel_id')
         if isinstance(self.channel_id, Snowflake):
