@@ -2,6 +2,7 @@ from .utils import Snowflake
 from .enums import ApplicationCommandType, ApplicationCommandOptionType
 from typing import Optional, List, Union
 from .guild import Guild
+from .http import Route
 
 
 class ApplicationCommandOptionChoice:
@@ -68,4 +69,18 @@ class ApplicationCommand(Snowflake):
             'type': self.type.value,
             'options': [d.get_json_data() for d in self.options]
         }
+
+    def is_global(self):
+        return self.guild_id is None
+
+    async def delete(self):
+        if self.is_global():
+            await self._client.http.request(Route('DELETE',
+                                                  f'/applications/{self.application_id.id}/commands/{self.id}'))
+        else:
+            await self._client.http.request(Route('DELETE',
+                                                  '/applications/{application_id}/guilds/{guild_id}/commands/{command_id}',
+                                                  application_id=self.application_id,
+                                                  guild_id=self.guild_id,
+                                                  command_id=self.id))
 
