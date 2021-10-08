@@ -146,8 +146,11 @@ class Client:
                                            json=c.get('ap').get_json_data())
             from pprint import pprint
             pprint(data)
-            ap = ApplicationCommand(**data, _callback=c.get('callback'))
-            self._application_commands[ap.id] = ap
+            try:
+                ap = ApplicationCommand(**data, _callback=c.get('callback'))
+                self._application_commands[ap.id] = ap
+            except:
+                logging.exception()
         # call ready event
         for g in data.get('guilds'):
             self._guilds[int(g['id'])] = None
