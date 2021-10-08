@@ -152,7 +152,7 @@ class Client:
                 continue
             m = get_matching_command(c.get('ap'), global_commands)
             if m is None:
-                logging.info(f'register new global command {c.get("app").name}')
+                logging.info(f'register new global command {c.get("ap").name}')
                 data = await self.http.request(Route('POST',
                                                      f'/applications/{self.application.id}/commands'),
                                                json=c.get('ap').get_json_data())
