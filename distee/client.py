@@ -137,15 +137,28 @@ class Client:
             logging.exception('Exception while handling interaction:')
 
     async def _on_ready(self, data: dict):
+        def get_matching_command(_ap: ApplicationCommand,
+                                 coms: List[ApplicationCommand]) -> Optional[ApplicationCommand]:
+            for com in coms:
+                # FIXME: also check if options match
+                if com.type == _ap.type and com.name == _ap.name and com.description == _ap.description:
+                    return com
+            return None
+
         # register global commands
+        global_commands = await self.fetch_global_application_commands()
         for c in self._command_registrar:
             if not c.get('global'):
                 continue
-            data = await self.http.request(Route('POST',
-                                                 f'/applications/{self.application.id}/commands'),
-                                           json=c.get('ap').get_json_data())
-            ap = ApplicationCommand(**data, _callback=c.get('callback'))
-            self._application_commands[ap.id] = ap
+            m = get_matching_command(c.get('ap'), global_commands)
+            if m is None:
+                data = await self.http.request(Route('POST',
+                                                     f'/applications/{self.application.id}/commands'),
+                                               json=c.get('ap').get_json_data())
+                ap = ApplicationCommand(**data, _callback=c.get('callback'))
+                self._application_commands[ap.id] = ap
+            else:
+                self._application_commands[m.id] = m
         # call ready event
         for g in data.get('guilds', []):
             self._guilds[int(g['id'])] = None
