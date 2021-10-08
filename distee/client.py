@@ -144,13 +144,8 @@ class Client:
             data = await self.http.request(Route('POST',
                                                  f'/applications/{self.application.id}/commands'),
                                            json=c.get('ap').get_json_data())
-            from pprint import pprint
-            pprint(data)
-            try:
-                ap = ApplicationCommand(**data, _callback=c.get('callback'))
-                self._application_commands[ap.id] = ap
-            except:
-                logging.exception()
+            ap = ApplicationCommand(**data, _callback=c.get('callback'))
+            self._application_commands[ap.id] = ap
         # call ready event
         for g in data.get('guilds'):
             self._guilds[int(g['id'])] = None
@@ -179,20 +174,23 @@ class Client:
 
 
     async def _register_guild_commands(self, gid: int):
-        for c in self._command_registrar:
-            if c.get('global'):
-                continue
-            gf = c.get('guild_filter')
-            if gf is None or \
-                    (isinstance(gf, int) and gf == gid) or \
-                    (isinstance(gf, list) and gid in gf):
-                ap = c.get('ap')
-                data = await self.http.request(Route('POST',
-                                                     f'/applications/{self.application.id}/guilds/{gid}/commands',
-                                                     guild_id=gid),
-                                               json=ap.get_json_data())
-                ap = ApplicationCommand(**data, _callback=c.get('callback'))
-                self._application_commands[ap.id] = ap
+        try:
+            for c in self._command_registrar:
+                if c.get('global'):
+                    continue
+                gf = c.get('guild_filter')
+                if gf is None or \
+                        (isinstance(gf, int) and gf == gid) or \
+                        (isinstance(gf, list) and gid in gf):
+                    ap = c.get('ap')
+                    data = await self.http.request(Route('POST',
+                                                         f'/applications/{self.application.id}/guilds/{gid}/commands',
+                                                         guild_id=gid),
+                                                   json=ap.get_json_data())
+                    ap = ApplicationCommand(**data, _callback=c.get('callback'))
+                    self._application_commands[ap.id] = ap
+        except:
+            logging.exception()
 
     async def _on_guild_delete(self, data: dict):
         if data.get('unavailable') is None:
