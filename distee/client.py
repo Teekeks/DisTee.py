@@ -352,7 +352,7 @@ class Client:
         if self._users.get(user.id) is None:
             self._users[user.id] = user
 
-    async def fetch_bot_application_information(self):
+    async def fetch_bot_application_information(self) -> Application:
         data = await self.http.request(Route('GET', '/oauth2/applications/@me'))
         self.application = Application(**data, _client=self)
         return self.application
@@ -366,6 +366,10 @@ class Client:
                                              f'/applications/{self.application.id}/guilds/{gid}/commands',
                                              guild_id=gid))
         return [ApplicationCommand(**d, _client=self) for d in data]
+
+    async def fetch_guild(self, s: Union[Snowflake, int]) -> Guild:
+        data = await self.http.request(Route('GET', 'guilds/:guild_id', guild_id=s))
+        return Guild(**data, _client=self)
 
 ########################################################################################################################
 # Command registration
