@@ -368,7 +368,7 @@ class Client:
         return [ApplicationCommand(**d, _client=self) for d in data]
 
     async def fetch_guild(self, s: Union[Snowflake, int]) -> Guild:
-        data = await self.http.request(Route('GET', 'guilds/{guild_id}', guild_id=s))
+        data = await self.http.request(Route('GET', '/guilds/{guild_id}', guild_id=s))
         return Guild(**data, _client=self)
 
 ########################################################################################################################
