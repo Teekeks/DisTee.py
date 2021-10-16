@@ -1,3 +1,4 @@
+from .http import Route
 from .utils import Snowflake
 from typing import Optional, List, Dict, Union
 from .enums import GuildVerificationLevel, MessageNotificationLevel, ExplicitContentFilterLevel, MFALevel, PremiumTier
@@ -101,3 +102,6 @@ class Guild(Snowflake):
 
     def get_role(self, role_id: Union[Snowflake, int]) -> Optional[Role]:
         return self._members.get(role_id.id if isinstance(role_id, Snowflake) else role_id)
+
+    async def fetch_invites(self):
+        return await self._client.http.request(Route('GET', '/guilds/{guild_id}/invites', guild_id=self.id))
