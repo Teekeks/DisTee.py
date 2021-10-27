@@ -3,8 +3,8 @@ from typing import Union, Optional
 from .enums import Event
 
 
-def event(self, name: Union[str, Event]):
-    def decorator(func):
+def event(name: Union[str, Event]):
+    def decorator(self, func):
         n = name.value if isinstance(name, Event) else name
         if self.client._event_listener.get(n) is None:
             self.client._event_listener[n] = []
