@@ -8,7 +8,6 @@ class User(Snowflake):
     username: str = None
     discriminator: str = None
     avatar_hash: Optional[str] = None
-    bot: bool = False
     flags: UserFlags = 0
     public_flags: UserFlags
 
@@ -22,3 +21,5 @@ class User(Snowflake):
         self.accent_color = args.get('accent_color')
         self.banner = args.get('banner')
         self.banner_color = args.get('banner_color')
+        self.bot: bool = args.get('bot', False)
+        self.system: bool = args.get('system', False)
