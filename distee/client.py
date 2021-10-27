@@ -144,7 +144,8 @@ class Client:
                 if com.type == _ap.type and com.name == _ap.name:
                     return com
             return None
-
+        for g in data.get('guilds', []):
+            self._guilds[int(g['id'])] = None
         # register global commands
         global_commands = await self.fetch_global_application_commands()
         for c in self._command_registrar:
@@ -164,7 +165,6 @@ class Client:
                 self._application_commands[m.id] = m
         # call ready event
         for g in data.get('guilds', []):
-            self._guilds[int(g['id'])] = None
             await self._register_guild_commands(int(g['id']))
         for event in self._event_listener.get(Event.READY.value, []):
             await event()
