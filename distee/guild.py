@@ -13,14 +13,14 @@ class Member(User):
 
     def __init__(self, **data):
         super(Member, self).__init__(**data.get('user'), _client=data.get('_client'))
+        self.guild: Guild = data.get('_guild')
         self.nick: Optional[str] = data.get('nick')
-        self.roles: Dict[int, Role] = {}  # FIXME port to role object
+        self.roles: Dict[int, Role] = {int(x): self.guild.get_role(int(x)) for x in data.get('roles')}
         self.joined_at = data.get('joined_at')  # FIXME port to datetime
         self.premium_since: Optional[str] = data.get('premium_since')
         self.deaf: bool = data.get('deaf')
         self.mute: bool = data.get('mute')
         self.pending: Optional[bool] = data.get('pending')
-        self.guild: Guild = data.get('_guild')
 
     async def add_role(self, role: Union[Role, int], reason: Optional[str] = None):
         await self._client.http.request(Route('PUT',
