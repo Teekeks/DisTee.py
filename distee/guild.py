@@ -38,6 +38,21 @@ class Member(User):
                                               role_id=role),
                                         reason=reason)
 
+    async def kick(self, reason: Optional[str] = None):
+        await self._client.http.request(Route('DELETE',
+                                              '/guilds/{guild_id}/members/{user_id}',
+                                              guild_id=self.guild.id,
+                                              user_id=self.id),
+                                        reason=reason)
+
+    async def ban(self, delete_message_days: Optional[int] = 0, reason: Optional[str] = None):
+        await self._client.http.request(Route('PUT',
+                                              '/guilds/{guild_id}/bans/{user_id}',
+                                              guild_id=self.guild.id,
+                                              user_id=self.id),
+                                        json={'delete_message_days': delete_message_days},
+                                        reason=reason)
+
 
 class Guild(Snowflake):
     
