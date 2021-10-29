@@ -16,6 +16,7 @@ class User(Snowflake):
         self.username = args.get('username')
         self.discriminator = args.get('discriminator')
         self.avatar_hash = args.get('avatar')
+        self.avatar: str = f'https://cdn.discordapp.com/avatars/{self.id}/{self.avatar_hash}.png'
         self.flags: UserFlags = UserFlags(args.get('flags') if args.get('flags') is not None else 0)
         self.public_flags: UserFlags = UserFlags(args.get('public_flags') if args.get('public_flags') is not None else 0)
         self.accent_color = args.get('accent_color')
