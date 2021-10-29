@@ -81,7 +81,9 @@ class Interaction(Snowflake):
         self.type: InteractionType = InteractionType(data.get('type'))
         self.guild_id: Optional[Snowflake] = snowflake_or_none(data.get('guild_id'))
         self.channel_id: Optional[Snowflake] = snowflake_or_none(data.get('channel_id'))
-        self.member: Optional[Member] = Member(**data.get('member'), _client=self._client) \
+        self.member: Optional[Member] = Member(**data.get('member'),
+                                               _client=self._client,
+                                               _guild=self._client.get_guild(self.guild_id)) \
             if data.get('member') is not None else None
         self.user: Optional[User] = User(**data.get('user'), _client=self._client) \
             if data.get('user') is not None else None
