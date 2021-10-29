@@ -22,6 +22,22 @@ class Member(User):
         self.pending: Optional[bool] = data.get('pending')
         self.guild: Guild = data.get('_guild')
 
+    async def add_role(self, role: Union[Role, int], reason: Optional[str] = None):
+        await self._client.http.request(Route('PUT',
+                                              '/guilds/{guild_id}/members/{user_id}/roles/{role_id}',
+                                              guild_id=self.guild.id,
+                                              user_id=self.id,
+                                              role_id=role),
+                                        reason=reason)
+
+    async def remove_role(self, role: Union[Role, int], reason: Optional[str] = None):
+        await self._client.http.request(Route('DELETE',
+                                              '/guilds/{guild_id}/members/{user_id}/roles/{role_id}',
+                                              guild_id=self.guild.id,
+                                              user_id=self.id,
+                                              role_id=role),
+                                        reason=reason)
+
 
 class Guild(Snowflake):
     
