@@ -45,11 +45,11 @@ class ApplicationCommandOption:
             self.options: List[ApplicationCommandOption] = [ApplicationCommandOption(**d) for d in data.get('options')]
 
         if data.get('choices') is None or len(data.get('choices')) == 0:
-            self.options: List[ApplicationCommandOptionChoice] = []
+            self.choices: List[ApplicationCommandOptionChoice] = []
         elif isinstance(data.get('choices')[0], ApplicationCommandOptionChoice):
-            self.options: List[ApplicationCommandOptionChoice] = data.get('choices')
+            self.choices: List[ApplicationCommandOptionChoice] = data.get('choices')
         else:
-            self.options: List[ApplicationCommandOptionChoice] = [ApplicationCommandOptionChoice(**d) for d in data.get('choices')]
+            self.choices: List[ApplicationCommandOptionChoice] = [ApplicationCommandOptionChoice(**d) for d in data.get('choices')]
 
 
     def get_json_data(self):
