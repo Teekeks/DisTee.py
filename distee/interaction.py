@@ -101,7 +101,7 @@ class Interaction(Snowflake):
                    components: Optional[List[dict]] = None,
                    ephemeral: Optional[bool] = None):
         """ACK interaction and send a message as response"""
-        json = {'type': InteractionResponseType.DEFERRED_UPDATE_MESSAGE.value,
+        json = {'type': InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE.value,
                 'data': {k: v for k, v in {
                         'content': content,
                         'flags': 1 << 6 if ephemeral else None,
