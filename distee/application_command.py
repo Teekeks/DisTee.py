@@ -37,8 +37,12 @@ class ApplicationCommandOption:
         self.name = data.get('name')
         self.description = data.get('description')
         self.required = data.get('required')
-        self.options = [ApplicationCommandOption(**d) for d in data.get('options')] \
-            if data.get('options') is not None else []
+        if data.get('options') is None or len(data.get('options')) == 0:
+            self.options: List[ApplicationCommandOption] = []
+        elif isinstance(data.get('options')[0], ApplicationCommandOption):
+            self.options: List[ApplicationCommandOption] = data.get('options')
+        else:
+            self.options: List[ApplicationCommandOption] = [ApplicationCommandOption(**d) for d in data.get('options')]
         self.choices = [ApplicationCommandOptionChoice(**d) for d in data.get('choices')] \
             if data.get('choices') is not None else []
 
