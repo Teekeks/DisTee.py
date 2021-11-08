@@ -122,17 +122,12 @@ class Client:
                     logging.error(f'could not find callback for command {interaction.data.name} ({_id})')
                     return
                 await ac.callback(interaction)
-                # lets respond
-                await self.http.request(Route('POST', f'/interactions/{interaction.id}/{interaction.token}/callback'),
-                                        json=interaction.response.get_json_data())
             elif interaction.type == InteractionType.MESSAGE_COMPONENT:
                 ac = self._interaction_handler.get(interaction.data.custom_id)
                 if ac is None:
                     logging.exception(f'could not find handler for interaction with custom id {interaction.data.custom_id}')
                     return
                 await ac(interaction)
-                await self.http.request(Route('POST', f'/interactions/{interaction.id}/{interaction.token}/callback'),
-                                        json=interaction.response.get_json_data())
         except:
             logging.exception('Exception while handling interaction:')
 

@@ -70,3 +70,11 @@ class ReconnectWebSocket(Exception):
 
 class ConnectionClosed(Exception):
     pass
+
+
+class InteractionException(Exception):
+    pass
+
+
+class WrongInteractionTypeException(InteractionException):
+    pass

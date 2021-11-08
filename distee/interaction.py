@@ -1,3 +1,5 @@
+from .errors import WrongInteractionTypeException
+from .http import Route
 from .utils import Snowflake, snowflake_or_none
 from .enums import InteractionType, ApplicationCommandType, InteractionResponseType, ComponentType
 from .flags import InteractionCallbackFlags
@@ -6,44 +8,6 @@ from .guild import Member
 from .user import User
 from .message import Message
 from .channel import BaseChannel, get_channel
-
-
-class InteractionResponse:
-
-    def __init__(self):
-        self.type: InteractionResponseType = InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE
-        self.tts: Optional[bool] = None
-        self.content: Optional[str] = None
-        self.embeds: Optional[List[dict]] = None
-        self.allowed_mentions: Optional[dict] = None
-        self.flags: Optional[InteractionCallbackFlags] = None
-        self.components = None
-
-    def get_json_data(self):
-        return {
-            'type': self.type.value,
-            'data': {k: v for k, v in {
-                'content': self.content,
-                'flags': self.flags,
-                'tts': self.tts,
-                'components': self.components,
-                'embeds': self.embeds,
-                'allowed_mentions': self.allowed_mentions
-            }.items() if v is not None}
-        }
-
-    @property
-    def ephemeral(self) -> bool:
-        return False
-
-    @ephemeral.setter
-    def ephemeral(self, val: bool):
-        if val:
-            if self.flags is None:
-                self.flags = 0
-            self.flags += InteractionCallbackFlags.EPHEMERAL
-        else:
-            self.flags -= InteractionCallbackFlags.EPHEMERAL
 
 
 class InteractionData(Snowflake):
@@ -91,6 +55,73 @@ class Interaction(Snowflake):
         self.version: int = data.get('version')
         self.data: Optional[InteractionData] = InteractionData(**data.get('data'), _client=self._client) \
             if data.get('data') is not None else None
-        self.response: InteractionResponse = InteractionResponse()
         self.message: Optional[Message] = Message(**data.get('message'), _client=self._client) \
             if data.get('message') is not None else None
+
+    async def defer_message_edit(self):
+        """ACK component interaction now and edit message later"""
+        if self.type != InteractionType.MESSAGE_COMPONENT:
+            raise WrongInteractionTypeException()
+        await self._client.http.request(Route('POST',
+                                              '/interactions/{interaction_id}/{interaction_token}/callback',
+                                              interaction_id=self.id,
+                                              interaction_token=self.token),
+                                        json={'type': InteractionResponseType.DEFERRED_UPDATE_MESSAGE.value, 'data': {}})
+
+    async def edit(self,
+                   tts: Optional[bool] = None,
+                   content: Optional[str] = None,
+                   embeds: Optional[List[dict]] = None,
+                   allowed_mentions: Optional[dict] = None,
+                   components: Optional[List[dict]] = None,
+                   ephemeral: Optional[bool] = None):
+        """ACK interaction and edit component message"""
+        if self.type != InteractionType.MESSAGE_COMPONENT:
+            raise WrongInteractionTypeException()
+        json = {'type': InteractionResponseType.UPDATE_MESSAGE.value,
+                'data': {k: v for k, v in {
+                        'content': content,
+                        'flags': 1 << 6 if ephemeral else None,
+                        'tts': tts,
+                        'components': components,
+                        'embeds': embeds,
+                        'allowed_mentions': allowed_mentions
+                    }.items() if v is not None}}
+        await self._client.http.request(Route('POST',
+                                              '/interactions/{interaction_id}/{interaction_token}/callback',
+                                              interaction_id=self.id,
+                                              interaction_token=self.token),
+                                        json=json)
+
+    async def send(self,
+                   tts: Optional[bool] = None,
+                   content: Optional[str] = None,
+                   embeds: Optional[List[dict]] = None,
+                   allowed_mentions: Optional[dict] = None,
+                   components: Optional[List[dict]] = None,
+                   ephemeral: Optional[bool] = None):
+        """ACK interaction and send a message as response"""
+        json = {'type': InteractionResponseType.DEFERRED_UPDATE_MESSAGE.value,
+                'data': {k: v for k, v in {
+                        'content': content,
+                        'flags': 1 << 6 if ephemeral else None,
+                        'tts': tts,
+                        'components': components,
+                        'embeds': embeds,
+                        'allowed_mentions': allowed_mentions
+                    }.items() if v is not None}}
+        await self._client.http.request(Route('POST',
+                                              '/interactions/{interaction_id}/{interaction_token}/callback',
+                                              interaction_id=self.id,
+                                              interaction_token=self.token),
+                                        json=json)
+
+    async def defer_send(self):
+        """ACK now and use send later"""
+        json = {'type': InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE.value,
+                'data': {}}
+        await self._client.http.request(Route('POST',
+                                              '/interactions/{interaction_id}/{interaction_token}/callback',
+                                              interaction_id=self.id,
+                                              interaction_token=self.token),
+                                        json=json)
