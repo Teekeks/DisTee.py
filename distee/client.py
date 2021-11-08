@@ -140,29 +140,31 @@ class Client:
         def get_matching_command(_ap: ApplicationCommand,
                                  coms: List[ApplicationCommand]) -> Optional[ApplicationCommand]:
             for com in coms:
-                # FIXME: also check if options match
                 if com.type == _ap.type and com.name == _ap.name:
                     return com
             return None
         for g in data.get('guilds', []):
             self._guilds[int(g['id'])] = None
         # register global commands
-        global_commands = await self.fetch_global_application_commands()
+        globals_to_override = []
         for c in self._command_registrar:
             if not c.get('global'):
                 continue
-            m = get_matching_command(c.get('ap'), global_commands)
-            if m is None:
-                logging.info(f'register new global command {c.get("ap").name}')
-                data = await self.http.request(Route('POST',
-                                                     f'/applications/{self.application.id}/commands'),
-                                               json=c.get('ap').get_json_data())
-                ap = ApplicationCommand(**data, _callback=c.get('callback'))
-                self._application_commands[ap.id] = ap
-            else:
-                logging.info(f'global command {m.name} is already registered')
-                m.callback = c.get('callback')
-                self._application_commands[m.id] = m
+            globals_to_override.append(c.get('ap').get_json_data())
+        data = await self.http.request(Route('PUT',
+                                             f'/applications/{self.application.id}/commands'),
+                                       json=globals_to_override)
+        for d in data:
+            callback = None
+            ap = ApplicationCommand(**d)
+            for c in self._command_registrar:
+                if not c.get('global'):
+                    continue
+                if c.get('ap').name == ap.name and c.get('ap').type == ap.type:
+                    callback = c.get('callback')
+                    break
+            ap.callback = callback
+            self._application_commands[ap.id] = ap
         # call ready event
         for g in data.get('guilds', []):
             await self._register_guild_commands(int(g['id']))

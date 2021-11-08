@@ -13,6 +13,16 @@ class ApplicationCommandOptionChoice:
         self.name = data.get('name')
         self.value = data.get('value')
 
+    def __eq__(self, other):
+        if not isinstance(other, ApplicationCommandOptionChoice):
+            return False
+        if self.name != other.name or self.value != other.value:
+            return False
+        return True
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
 
 class ApplicationCommandOption:
     type: ApplicationCommandOptionType
@@ -42,6 +52,27 @@ class ApplicationCommandOption:
             'choices': [{'name': d.name, 'value': d.value} for d in self.choices]
         }
 
+    def __eq__(self, other):
+        if not isinstance(other, ApplicationCommandOption):
+            return False
+        if self.type != other.type or self.name != other.name or self.description != other.description or \
+                self.required != other.required:
+            return False
+        if len(self.options) != len(other.options):
+            return False
+        for i in range(len(self.options)):
+            if self.options[i] != other.options[i]:
+                return False
+        if len(self.choices) != len(other.choices):
+            return False
+        for i in range(len(self.choices)):
+            if self.choices[i] != other.choices[i]:
+                return False
+        return True
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
 
 class ApplicationCommand(Snowflake):
     
@@ -67,6 +98,7 @@ class ApplicationCommand(Snowflake):
             'name': self.name,
             'description': self.description,
             'type': self.type.value,
+            'default_permission': self.default_permission,
             'options': [d.get_json_data() for d in self.options]
         }
 
@@ -83,4 +115,44 @@ class ApplicationCommand(Snowflake):
                                                   application_id=self.application_id,
                                                   guild_id=self.guild_id,
                                                   command_id=self.id))
+
+    async def set_permissions(self, guild: Union[Snowflake, int], permissions: List[dict]):
+        await self._client.http.request(Route('PUT',
+                                              '/applications/{application_id}/guilds/{guild_id}/commands/{command_id}/permissions',
+                                              application_id=self.application_id,
+                                              guild_id=guild,
+                                              command_id=self.id),
+                                        json=permissions)
+
+    async def fetch_permissions(self, guild: Union[Snowflake, int]) -> List[dict]:
+        data = await self._client.http.request(Route('GET',
+                                                     '/applications/{application_id}/guilds/{guild_id}/commands/{command_id}/permissions',
+                                                     application_id=self.application_id,
+                                                     guild_id=guild,
+                                                     command_id=self.id))
+        return data.get('permissions', [])
+
+    def __eq__(self, other: 'ApplicationCommand'):
+        if not isinstance(other, ApplicationCommand):
+            return False
+        if self.type != other.type:
+            return False
+        if self.name != other.name:
+            return False
+        if (self.description if self.description is not None else '') != (other.description if other.description is not None else ''):
+            return False
+        if len(self.options) != len(other.options):
+            return False
+        for i in range(len(self.options)):
+            if self.options[i] != other.options[i]:
+                return False
+        if self.default_permission != other.default_permission:
+            return False
+        return True
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+
+
 
