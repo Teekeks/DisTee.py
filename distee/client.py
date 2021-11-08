@@ -151,10 +151,10 @@ class Client:
             if not c.get('global'):
                 continue
             globals_to_override.append(c.get('ap').get_json_data())
-        data = await self.http.request(Route('PUT',
-                                             f'/applications/{self.application.id}/commands'),
-                                       json=globals_to_override)
-        for d in data:
+        _data = await self.http.request(Route('PUT',
+                                              f'/applications/{self.application.id}/commands'),
+                                        json=globals_to_override)
+        for d in _data:
             callback = None
             ap = ApplicationCommand(**d)
             for c in self._command_registrar:
