@@ -116,14 +116,36 @@ class Interaction(Snowflake):
                                               interaction_token=self.token),
                                         json=json)
 
+    async def send_followup(self,
+                            tts: Optional[bool] = None,
+                            content: Optional[str] = None,
+                            embeds: Optional[List[dict]] = None,
+                            allowed_mentions: Optional[dict] = None,
+                            components: Optional[List[dict]] = None,
+                            ephemeral: Optional[bool] = None):
+        """send a followup message after deferring it"""
+        json = {'type': InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE.value,
+                'data': {k: v for k, v in {
+                        'content': content,
+                        'flags': 1 << 6 if ephemeral else None,
+                        'tts': tts,
+                        'components': components,
+                        'embeds': embeds,
+                        'allowed_mentions': allowed_mentions
+                    }.items() if v is not None}}
+        data = await self._client.http.request(Route('POST',
+                                                     '/webhooks/{application_id}/{interaction_token}',
+                                                     application_id=self.application_id,
+                                                     interaction_token=self.token),
+                                               json=json)
+        return Message(**data, _client=self._client)
+
     async def defer_send(self):
         """ACK now and use send later"""
         json = {'type': InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE.value,
                 'data': {}}
-        data = await self._client.http.request(Route('POST',
-                                                     '/interactions/{interaction_id}/{interaction_token}/callback',
-                                                     interaction_id=self.id,
-                                                     interaction_token=self.token),
-                                               json=json)
-        from pprint import pprint
-        pprint(data)
+        await self._client.http.request(Route('POST',
+                                              '/interactions/{interaction_id}/{interaction_token}/callback',
+                                              interaction_id=self.id,
+                                              interaction_token=self.token),
+                                        json=json)
