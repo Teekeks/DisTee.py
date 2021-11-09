@@ -124,15 +124,14 @@ class Interaction(Snowflake):
                             components: Optional[List[dict]] = None,
                             ephemeral: Optional[bool] = None):
         """send a followup message after deferring it"""
-        json = {'type': InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE.value,
-                'data': {k: v for k, v in {
-                        'content': content,
-                        'flags': 1 << 6 if ephemeral else None,
-                        'tts': tts,
-                        'components': components,
-                        'embeds': embeds,
-                        'allowed_mentions': allowed_mentions
-                    }.items() if v is not None}}
+        json = {k: v for k, v in {
+                    'content': content,
+                    'flags': 1 << 6 if ephemeral else None,
+                    'tts': tts,
+                    'components': components,
+                    'embeds': embeds,
+                    'allowed_mentions': allowed_mentions
+                }.items() if v is not None}
         data = await self._client.http.request(Route('POST',
                                                      '/webhooks/{application_id}/{interaction_token}',
                                                      application_id=self.application_id,
