@@ -13,6 +13,10 @@ def get_dict_from_json(data) -> dict:
     return json.loads(data)
 
 
+def get_json_from_dict(data) -> str:
+    return json.dumps(data)
+
+
 class Snowflake:
 
     def __init__(self, **args):

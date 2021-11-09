@@ -1,6 +1,6 @@
 from .errors import WrongInteractionTypeException
 from .http import Route
-from .utils import Snowflake, snowflake_or_none
+from .utils import Snowflake, snowflake_or_none, get_json_from_dict
 from .enums import InteractionType, ApplicationCommandType, InteractionResponseType, ComponentType
 from .flags import InteractionCallbackFlags
 from typing import Optional, List
@@ -137,7 +137,7 @@ class Interaction(Snowflake):
                                                      '/webhooks/{application_id}/{interaction_token}',
                                                      application_id=self.application_id,
                                                      interaction_token=self.token),
-                                               json=json)
+                                               form=[{'name': 'payload_json', 'value': get_json_from_dict(json)}])
         return Message(**data, _client=self._client)
 
     async def defer_send(self):
