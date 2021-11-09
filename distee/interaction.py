@@ -120,8 +120,10 @@ class Interaction(Snowflake):
         """ACK now and use send later"""
         json = {'type': InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE.value,
                 'data': {}}
-        await self._client.http.request(Route('POST',
-                                              '/interactions/{interaction_id}/{interaction_token}/callback',
-                                              interaction_id=self.id,
-                                              interaction_token=self.token),
-                                        json=json)
+        data = await self._client.http.request(Route('POST',
+                                                     '/interactions/{interaction_id}/{interaction_token}/callback',
+                                                     interaction_id=self.id,
+                                                     interaction_token=self.token),
+                                               json=json)
+        from pprint import pprint
+        pprint(data)
