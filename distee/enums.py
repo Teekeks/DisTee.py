@@ -99,5 +99,6 @@ class Event(Enum):
     GUILD_JOINED = 'guild_joined'
     GUILD_LEFT = 'guild_left'
     MEMBER_JOINED = 'member_joined'
+    MEMBER_UPDATED = 'member_updated'
 
     MESSAGE_SEND = 'message_send'

@@ -81,6 +81,7 @@ class Client:
         self.register_raw_gateway_event_listener('READY', self._on_ready)
         self.register_raw_gateway_event_listener('INTERACTION_CREATE', self._on_interaction_create)
         self.register_raw_gateway_event_listener('GUILD_DELETE', self._on_guild_delete)
+        self.register_raw_gateway_event_listener('GUILD_MEMBER_UPDATE', self._on_guild_member_update)
 
     def is_closed(self) -> bool:
         """Returns whether or not this client is closing down"""
@@ -111,6 +112,25 @@ class Client:
         events = self._event_listener.get(Event.MESSAGE_SEND.value, [])
         for event in events:
             await event(msg)
+
+    async def _on_guild_member_update(self, data: dict):
+        try:
+            guild = self.get_guild(int(data.get('guild_id')))
+            if guild is None:
+                raise Exception('guild member update for unknown guild')
+            member = guild.get_member(int(data.get('user').get('id')))
+            if member is None:
+                raise Exception('member is not cached')
+            new_member = Member(**data, _client=self, _guild=guild)
+            # lets update the member
+            guild._members[member.id] = new_member
+            events = self._event_listener.get(Event.MEMBER_UPDATED.value, [])
+            for event in events:
+                asyncio.ensure_future(event(member, new_member))
+            pass
+        except:
+            logging.exception('Exception while handling guild member update')
+        pass
 
     async def _on_interaction_create(self, data: dict):
         try:
