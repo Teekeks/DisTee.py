@@ -171,7 +171,7 @@ class Client:
                                         json=globals_to_override)
         for d in _data:
             callback = None
-            ap = ApplicationCommand(**d)
+            ap = ApplicationCommand(**d, _client=self)
             for c in self._command_registrar:
                 if not c.get('global'):
                     continue
