@@ -218,7 +218,7 @@ class Client:
                                                      f'/applications/{self.application.id}/guilds/{gid}/commands',
                                                      guild_id=gid),
                                                json=ap.get_json_data())
-                ap = ApplicationCommand(**data, _callback=c.get('callback'))
+                ap = ApplicationCommand(**data, _callback=c.get('callback'), _client=self)
                 self._application_commands[ap.id] = ap
 
     async def _on_guild_delete(self, data: dict):
