@@ -136,7 +136,7 @@ class ApplicationCommand(Snowflake):
                                               application_id=self.application_id,
                                               guild_id=guild,
                                               command_id=self.id),
-                                        json=permissions)
+                                        json={'permissions': permissions})
 
     async def fetch_permissions(self, guild: Union[Snowflake, int]) -> List[dict]:
         data = await self._client.http.request(Route('GET',
