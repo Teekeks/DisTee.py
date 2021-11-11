@@ -139,10 +139,10 @@ class Interaction(Snowflake):
                                                form=[{'name': 'payload_json', 'value': get_json_from_dict(json)}])
         return Message(**data, _client=self._client)
 
-    async def defer_send(self):
+    async def defer_send(self, ephemeral: Optional[bool] = None):
         """ACK now and use send later"""
         json = {'type': InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE.value,
-                'data': {}}
+                'data': {'flags': 1 << 6} if ephemeral else {}}
         await self._client.http.request(Route('POST',
                                               '/interactions/{interaction_id}/{interaction_token}/callback',
                                               interaction_id=self.id,
