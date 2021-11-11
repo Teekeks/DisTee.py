@@ -12,7 +12,7 @@ from .errors import ClientException, ReconnectWebSocket, ConnectionClosed
 from .message import Message
 from .utils import Snowflake
 from .flags import Intents
-from .enums import InteractionType, Event
+from .enums import InteractionType, Event, ApplicationCommandType
 from .guild import Guild, Member
 from .application_command import ApplicationCommand
 from .application import Application
@@ -361,6 +361,12 @@ class Client:
 
     def get_user(self, s: Union[Snowflake, int]) -> Optional[User]:
         return self._users.get(s.id if isinstance(s, Snowflake) else s)
+
+    def get_application_commands(self, name: str, _type: ApplicationCommandType) -> Optional[ApplicationCommand]:
+        for ac in self._application_commands.values():
+            if ac.type == _type and ac.name == name:
+                return ac
+        return None
 
     def add_user_to_cache(self, user: Union[User, dict]):
         """Adds a user to the local cache."""
