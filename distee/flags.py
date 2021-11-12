@@ -44,6 +44,12 @@ class Intents:
         val.value -= val._values['GUILD_PRESENCES'] | val._values['GUILD_MEMBERS']
         return val
 
+    def remove(self, intent: str):
+        self.value -= self._values[intent]
+
+    def add(self, intent: str):
+        self.value += self._values[intent]
+
 
 class SystemChannelFlags(IntFlag):
     SUPPRESS_JOIN_NOTIFICATIONS = 1 << 0
