@@ -131,7 +131,7 @@ class Guild(Snowflake):
     def get_member(self, member_id: Union[Snowflake, int]) -> Optional[Member]:
         return self._members.get(member_id.id if isinstance(member_id, Snowflake) else member_id)
 
-    def fetch_member(self, member_id: Union[Snowflake, int]) -> Member:
+    async def fetch_member(self, member_id: Union[Snowflake, int]) -> Member:
         data = await self._client.http.request(Route('GET',
                                                      '/guilds/{guild_id}/members/{member_id}',
                                                      guild_id=self.id,
