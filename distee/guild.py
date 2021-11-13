@@ -142,7 +142,7 @@ class Guild(Snowflake):
         return member
 
     def get_role(self, role_id: Union[Snowflake, int]) -> Optional[Role]:
-        return self._members.get(role_id.id if isinstance(role_id, Snowflake) else role_id)
+        return self.roles.get(role_id.id if isinstance(role_id, Snowflake) else role_id)
 
     async def fetch_invites(self):
         return await self._client.http.request(Route('GET', '/guilds/{guild_id}/invites', guild_id=self.id))
