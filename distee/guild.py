@@ -52,6 +52,13 @@ class Member(User):
                                               user_id=self.id),
                                         json={'delete_message_days': delete_message_days},
                                         reason=reason)
+    
+    def get_highest_role(self) -> Role:
+        highest: Role = None
+        for r in self.roles.values():
+            if highest is None or highest.position < r.position:
+                highest = r
+        return highest
 
 
 class Guild(Snowflake):
