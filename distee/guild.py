@@ -78,7 +78,7 @@ class Guild(Snowflake):
             MessageNotificationLevel(kwargs.get('default_message_notifications'))
         self.explicit_content_filter: ExplicitContentFilterLevel = \
             ExplicitContentFilterLevel(kwargs.get('explicit_content_filter'))
-        self.roles: Dict[int, Role] = {int(k.get('id')): Role(**k, _client=self._client) for k in kwargs.get('roles')}
+        self.roles: Dict[int, Role] = {int(k.get('id')): Role(**k, _client=self._client, _guild=self) for k in kwargs.get('roles')}
         self.emojis = []  # FIXME parse emojis
         self.features: List[str] = kwargs.get('features')
         self.mfa_level: MFALevel = MFALevel(kwargs.get('mfa_level'))

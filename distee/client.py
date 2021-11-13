@@ -6,6 +6,7 @@ from typing import Callable, Awaitable, Optional, Union, List, TypedDict, Dict
 import aiohttp
 
 from .gateway import DiscordWebSocket
+from .role import Role
 from .user import User
 from .http import HTTPClient, Route
 from .errors import ClientException, ReconnectWebSocket, ConnectionClosed
@@ -83,6 +84,7 @@ class Client:
         self.register_raw_gateway_event_listener('GUILD_DELETE', self._on_guild_delete)
         self.register_raw_gateway_event_listener('GUILD_MEMBER_UPDATE', self._on_guild_member_update)
         self.register_raw_gateway_event_listener('GUILD_UPDATE', self._on_guild_update)
+        self.register_raw_gateway_event_listener('GUILD_ROLE_CREATE', self._on_guild_role_create)
 
     def is_closed(self) -> bool:
         """Returns whether or not this client is closing down"""
@@ -98,6 +100,13 @@ class Client:
 ########################################################################################################################
 # EVENT HOOKS
 ########################################################################################################################
+
+    async def _on_guild_role_create(self, data: dict):
+        guild = self.get_guild(int(data['guild_id']))
+        role = Role(**data['role'], _client=self, _guild=guild)
+        guild.roles[role.id] = role
+        for event in self._event_listener.get(Event.GUILD_ROLE_CREATED.value, []):
+            asyncio.ensure_future(event(role))
 
     async def _on_guild_update(self, data: dict):
         g = Guild(**data, _client=self)

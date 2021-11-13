@@ -15,6 +15,7 @@ class Role(Snowflake):
     
     def __init__(self, **data):
         super(Role, self).__init__(**data)
+        self.guild = data.get('_guild')
         self.name: str = data.get('name')
         self.color: int = data.get('color')
         self.hoist: bool = data.get('hoist')
