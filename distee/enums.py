@@ -103,5 +103,6 @@ class Event(Enum):
 
     GUILD_UPDATED = 'guild_updated'
     GUILD_ROLE_CREATED = 'guild_role_created'
+    GUILD_ROLE_DELETED = 'guild_role_deleted'
 
     MESSAGE_SEND = 'message_send'

@@ -85,6 +85,7 @@ class Client:
         self.register_raw_gateway_event_listener('GUILD_MEMBER_UPDATE', self._on_guild_member_update)
         self.register_raw_gateway_event_listener('GUILD_UPDATE', self._on_guild_update)
         self.register_raw_gateway_event_listener('GUILD_ROLE_CREATE', self._on_guild_role_create)
+        self.register_raw_gateway_event_listener('GUILD_ROLE_DELETE', self._on_guild_role_delete)
 
     def is_closed(self) -> bool:
         """Returns whether or not this client is closing down"""
@@ -100,6 +101,13 @@ class Client:
 ########################################################################################################################
 # EVENT HOOKS
 ########################################################################################################################
+
+    async def _on_guild_role_delete(self, data: dict):
+        guild = self.get_guild(int(data['guild_id']))
+        role = guild.get_role(int(data['role_id']))
+        guild.roles.pop(int(data['role_id']))
+        for event in self._event_listener.get(Event.GUILD_ROLE_DELETED.value, []):
+            asyncio.ensure_future(event(role))
 
     async def _on_guild_role_create(self, data: dict):
         guild = self.get_guild(int(data['guild_id']))
