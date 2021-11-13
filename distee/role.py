@@ -1,3 +1,4 @@
+from .flags import Permissions
 from .utils import Snowflake
 from typing import Optional
 
@@ -18,7 +19,8 @@ class Role(Snowflake):
         self.color: int = data.get('color')
         self.hoist: bool = data.get('hoist')
         self.position: int = data.get('position')
-        self.permissions: str = data.get('permissions')
+        self.raw_permissions: str = data.get('permissions')
+        self.permissions: Permissions = Permissions(int(self.raw_permissions))
         self.managed: bool = data.get('managed')
         self.mentionable: bool = data.get('mentionable')
         self.tags: Optional[RoleTag] = RoleTag(**data.get('tags')) if data.get('tags') is not None else None
