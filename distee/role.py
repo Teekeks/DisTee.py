@@ -15,6 +15,9 @@ class Role(Snowflake):
     
     def __init__(self, **data):
         super(Role, self).__init__(**data)
+        self.copy(**data)
+
+    def copy(self, **data):
         self.guild = data.get('_guild')
         self.name: str = data.get('name')
         self.color: int = data.get('color')
@@ -25,5 +28,6 @@ class Role(Snowflake):
         self.managed: bool = data.get('managed')
         self.mentionable: bool = data.get('mentionable')
         self.tags: Optional[RoleTag] = RoleTag(**data.get('tags')) if data.get('tags') is not None else None
+
 
 

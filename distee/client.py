@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import signal
+from copy import deepcopy
 from typing import Callable, Awaitable, Optional, Union, List, TypedDict, Dict
 
 import aiohttp
@@ -105,9 +106,9 @@ class Client:
 
     async def _on_guild_role_update(self, data: dict):
         guild = self.get_guild(int(data['guild_id']))
-        role = Role(**data['role'], _client=self, _guild=guild)
-        old_role = guild.get_role(role.id)
-        guild.roles[role.id] = role
+        role = guild.get_role(int(data['role']['id']))
+        old_role = deepcopy(role)
+        role.copy(**data['role'])
         for event in self._event_listener.get(Event.GUILD_ROLE_UPDATED.value, []):
             asyncio.ensure_future(event(old_role, role))
 
