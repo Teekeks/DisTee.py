@@ -119,7 +119,7 @@ class Client:
         # call on_message event
         events = self._event_listener.get(Event.MESSAGE_SEND.value, [])
         for event in events:
-            await event(msg)
+            asyncio.ensure_future(event(msg))
 
     async def _on_guild_member_update(self, data: dict):
         try:
