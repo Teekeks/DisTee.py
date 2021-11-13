@@ -82,6 +82,7 @@ class Client:
         self.register_raw_gateway_event_listener('INTERACTION_CREATE', self._on_interaction_create)
         self.register_raw_gateway_event_listener('GUILD_DELETE', self._on_guild_delete)
         self.register_raw_gateway_event_listener('GUILD_MEMBER_UPDATE', self._on_guild_member_update)
+        self.register_raw_gateway_event_listener('GUILD_UPDATE', self._on_guild_update)
 
     def is_closed(self) -> bool:
         """Returns whether or not this client is closing down"""
@@ -97,6 +98,13 @@ class Client:
 ########################################################################################################################
 # EVENT HOOKS
 ########################################################################################################################
+
+    async def _on_guild_update(self, data: dict):
+        g = Guild(**data, _client=self)
+        old = self.get_guild(g.id)
+        self._guilds[g.id] = g
+        for event in self._event_listener.get(Event.GUILD_UPDATED.value, []):
+            asyncio.ensure_future(event(old, g))
 
     async def _on_message(self, data: dict):
         # lets check if we know that user

@@ -101,4 +101,6 @@ class Event(Enum):
     MEMBER_JOINED = 'member_joined'
     MEMBER_UPDATED = 'member_updated'
 
+    GUILD_UPDATED = 'guild_updated'
+
     MESSAGE_SEND = 'message_send'
