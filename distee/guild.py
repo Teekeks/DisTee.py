@@ -131,6 +131,16 @@ class Guild(Snowflake):
     def get_member(self, member_id: Union[Snowflake, int]) -> Optional[Member]:
         return self._members.get(member_id.id if isinstance(member_id, Snowflake) else member_id)
 
+    def fetch_member(self, member_id: Union[Snowflake, int]) -> Member:
+        data = await self._client.http.request(Route('GET',
+                                                     '/guilds/{guild_id}/members/{member_id}',
+                                                     guild_id=self.id,
+                                                     member_id=member_id))
+        member = Member(**data, _client=self._client, _guild=self)
+        # override cache
+        self._members[member.id] = member
+        return member
+
     def get_role(self, role_id: Union[Snowflake, int]) -> Optional[Role]:
         return self._members.get(role_id.id if isinstance(role_id, Snowflake) else role_id)
 
