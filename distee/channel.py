@@ -1,5 +1,6 @@
 import json
 
+import abc
 from .utils import Snowflake
 from .enums import ChannelType
 from typing import Optional, List, Union
@@ -33,7 +34,7 @@ class Category(GuildChannel):
         super(Category, self).__init__(**data)
 
 
-class MessageableChannel(BaseChannel):
+class MessageableChannel(BaseChannel, abc.Messageable):
     """Any channel that can contain text"""
 
     def _get_reference(self, msg: 'Message') -> dict:
@@ -41,6 +42,9 @@ class MessageableChannel(BaseChannel):
             'message_id': msg.id,
             'channel_id': msg.channel_id.id
         }
+
+    async def _get_channel(self) -> 'MessageableChannel':
+        return self
 
     async def send(self,
                    content: str = None,
