@@ -13,7 +13,7 @@ class Messageable:
             'channel_id': msg.channel_id.id
         }
 
-    async def _get_channel(self) -> MessageableChannel:
+    async def _get_channel(self) -> 'MessageableChannel':
         raise NotImplementedError
 
     async def send(self,
