@@ -13,7 +13,7 @@ class User(Snowflake, abc.Messageable):
     avatar_hash: Optional[str] = None
     flags: UserFlags = 0
     public_flags: UserFlags
-    dm_channel: DMChannel
+    dm_channel: DMChannel = None
 
     async def _get_channel(self) -> MessageableChannel:
         return await self.fetch_dm_channel()
