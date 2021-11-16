@@ -15,7 +15,7 @@ from .message import Message
 from .utils import Snowflake
 from .flags import Intents
 from .enums import InteractionType, Event, ApplicationCommandType
-from .guild import Guild, Member
+from .guild import Guild, Member, VoiceState
 from .application_command import ApplicationCommand
 from .application import Application
 from .interaction import Interaction
@@ -88,6 +88,7 @@ class Client:
         self.register_raw_gateway_event_listener('GUILD_ROLE_CREATE', self._on_guild_role_create)
         self.register_raw_gateway_event_listener('GUILD_ROLE_DELETE', self._on_guild_role_delete)
         self.register_raw_gateway_event_listener('GUILD_ROLE_UPDATE', self._on_guild_role_update)
+        self.register_raw_gateway_event_listener('VOICE_STATE_UPDATE', self._on_voice_state_update)
 
     def is_closed(self) -> bool:
         """Returns whether or not this client is closing down"""
@@ -103,6 +104,22 @@ class Client:
 ########################################################################################################################
 # EVENT HOOKS
 ########################################################################################################################
+
+    async def _on_voice_state_update(self, data: dict):
+        guild = self.get_guild(int(data.get('guild_id')))
+        usr_id = int(data.get('user_id'))
+        current = guild.voice_states.get(usr_id)
+        if current is None:
+            # add new
+            vs = VoiceState(**data, _guild=guild, _client=self)
+            guild.voice_states[vs.user_id.id] = vs
+        else:
+            if data.get('channel_id') is None:
+                # disconnect -> remove
+                guild.voice_states.pop(usr_id, None)
+            else:
+                # update existing
+                guild.voice_states[usr_id].from_data(**data)
 
     async def _on_guild_role_update(self, data: dict):
         guild = self.get_guild(int(data['guild_id']))

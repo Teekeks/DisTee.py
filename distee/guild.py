@@ -61,6 +61,40 @@ class Member(User):
         return highest
 
 
+class VoiceState:
+
+    guild: 'Guild' = None
+    _client: 'Client' = None
+    channel_id: Snowflake = None
+    user_id: Snowflake = None
+    session_id: str = None
+    deaf: bool = None
+    mute: bool = None
+    self_deaf: bool = None
+    self_mute: bool = None
+    self_stream: bool = None
+    self_video: bool = None
+    suppress: bool = None
+    request_to_speak_timestamp: str = None
+
+    def __init__(self, **data):
+        self.guild = data.get('_guild')
+        self._client: 'Client' = data.get('_client')
+        self.from_data(**data)
+
+    def from_data(self, **data):
+        self.channel_id = Snowflake(id=data.get('channel_id'))
+        self.user_id = Snowflake(id=data.get('user_id'))
+        self.session_id = data.get('session_id')
+        self.deaf = data.get('deaf')
+        self.mute = data.get('mute')
+        self.self_deaf = data.get('self_deaf')
+        self.self_mute = data.get('self_mute')
+        self.self_stream = data.get('self_stream', False)
+        self.self_video = data.get('self_video')
+        self.request_to_speak_timestamp = data.get('request_to_speak_timestamp')
+
+
 class Guild(Snowflake):
     
     def __init__(self, **kwargs):
@@ -106,6 +140,9 @@ class Guild(Snowflake):
             self._channels[c.id] = c
         self.threads = []  # FIXME parse threads
         # FIXME parse presences
+        self.voice_states: Dict[int, VoiceState] = {
+            int(d.get('user_id')): VoiceState(**d, _client=self._client, _guild=self)
+            for d in kwargs.get('voice_states', [])}
         self.max_presences: Optional[int] = kwargs.get('max_presences')
         self.max_members: Optional[int] = kwargs.get('max_members')
         self.vanity_url_code: Optional[str] = kwargs.get('vanity_url_code')
