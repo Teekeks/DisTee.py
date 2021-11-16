@@ -3,7 +3,7 @@ import json
 from distee.http import Route
 
 if TYPE_CHECKING:
-    from distee.channel import GuildChannel, MessageableChannel
+    from distee.channel import MessageableChannel
 
 class Messageable:
 
@@ -37,11 +37,7 @@ class Messageable:
         if allowed_mentions is not None:
             payload['allowed_mentions'] = allowed_mentions
         form.append({'name': 'payload_json', 'value': json.dumps(payload)})
-        gid = None
-        if isinstance(self, GuildChannel):
-            gid = self.guild_id
         await self._client.http.request(Route('POST',
                                               f'/channels/{channel.id}/messages',
-                                              channel_id=self.id,
-                                              guild_id=gid),
+                                              channel_id=self.id),
                                         form=form)
