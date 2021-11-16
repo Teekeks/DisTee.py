@@ -1,8 +1,9 @@
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
 import json
-from distee.channel import GuildChannel, MessageableChannel
 from distee.http import Route
 
+if TYPE_CHECKING:
+    from distee.channel import GuildChannel, MessageableChannel
 
 class Messageable:
 
