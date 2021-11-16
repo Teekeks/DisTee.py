@@ -136,7 +136,7 @@ class Client:
     async def _on_message(self, data: dict):
         # lets check if we know that user
         if self._users.get(data.get('author').get('id')) is None:
-            usr = User(**data.get('author'))
+            usr = User(**data.get('author'), _client=self)
             self._users[usr.id] = usr
         msg = Message(**data, _client=self)
         # add to cache
