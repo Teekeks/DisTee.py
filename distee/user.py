@@ -1,5 +1,5 @@
-import abc
-from .channel import TextChannel, DMChannel, MessageableChannel
+from . import abc
+from .channel import DMChannel, MessageableChannel
 from .http import Route
 from .utils import *
 from typing import Optional

@@ -1,6 +1,6 @@
 import json
 
-import abc
+from . import abc
 from .utils import Snowflake
 from .enums import ChannelType
 from typing import Optional, List, Union
