@@ -389,7 +389,9 @@ class Client:
 
     async def fetch_user(self, uid: Snowflake) -> User:
         data = await self.http.request(Route('GET', f'/users/{uid.id}'))
-        return User(**data)
+        user = User(**data, _client=self)
+        self.add_user_to_cache(user)
+        return user
 
     def get_guild(self, s: Union[Snowflake, int]) -> Optional[Guild]:
         return self._guilds.get(s.id if isinstance(s, Snowflake) else s)
