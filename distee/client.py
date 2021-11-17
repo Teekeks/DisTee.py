@@ -70,6 +70,9 @@ class Client:
     _application_commands: Dict[int, ApplicationCommand] = {}
     _interaction_handler: Dict[str, Callable] = {}
     _command_registrar: List[Dict] = []
+    gateway_listener = None
+    interaction_listener = None
+    command_listener = None
 
     def __init__(self):
         self.ws = None
@@ -190,11 +193,15 @@ class Client:
             _id = interaction.data.id
             if interaction.type == InteractionType.APPLICATION_COMMAND:
                 ac = self._application_commands.get(_id)
+                if self.command_listener is not None:
+                    asyncio.ensure_future(self.command_listener(ac, interaction))
                 if ac is None:
                     logging.error(f'could not find callback for command {interaction.data.name} ({_id})')
                     return
                 await ac.callback(interaction)
             elif interaction.type == InteractionType.MESSAGE_COMPONENT:
+                if self.interaction_listener is not None:
+                    asyncio.ensure_future(self.interaction_listener(interaction))
                 ac = self._interaction_handler.get(interaction.data.custom_id)
                 if ac is None:
                     logging.exception(f'could not find handler for interaction with custom id {interaction.data.custom_id}')
@@ -204,12 +211,6 @@ class Client:
             logging.exception('Exception while handling interaction:')
 
     async def _on_ready(self, data: dict):
-        def get_matching_command(_ap: ApplicationCommand,
-                                 coms: List[ApplicationCommand]) -> Optional[ApplicationCommand]:
-            for com in coms:
-                if com.type == _ap.type and com.name == _ap.name:
-                    return com
-            return None
         for g in data.get('guilds', []):
             self._guilds[int(g['id'])] = None
         # register global commands
@@ -288,6 +289,8 @@ class Client:
 
     async def dispatch_gateway_event(self, event: str, data: dict):
         try:
+            if self.gateway_listener is not None:
+                asyncio.ensure_future(self.gateway_listener(event, data))
             events = self._raw_gateway_listener.get(event)
             if events is None:
                 return
