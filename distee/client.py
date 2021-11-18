@@ -174,15 +174,16 @@ class Client:
             if guild is None:
                 raise Exception('guild member update for unknown guild')
             member = guild.get_member(int(data.get('user').get('id')))
-            if member is None:
-                raise Exception('member is not cached')
             new_member = Member(**data, _client=self, _guild=guild)
             # lets update the member
             guild._members[member.id] = new_member
-            events = self._event_listener.get(Event.MEMBER_UPDATED.value, [])
-            for event in events:
-                asyncio.ensure_future(event(member, new_member))
-            pass
+            if member is not None:
+                events = self._event_listener.get(Event.MEMBER_UPDATED.value, [])
+                for event in events:
+                    asyncio.ensure_future(event(member, new_member))
+                pass
+            else:
+                logging.warning(f'skipped member update for {new_member.id} in {guild.id}: old member not cached')
         except:
             logging.exception('Exception while handling guild member update')
         pass
