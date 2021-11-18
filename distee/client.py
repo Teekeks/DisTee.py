@@ -176,7 +176,7 @@ class Client:
             member = guild.get_member(int(data.get('user').get('id')))
             new_member = Member(**data, _client=self, _guild=guild)
             # lets update the member
-            guild._members[member.id] = new_member
+            guild._members[new_member.id] = new_member
             if member is not None:
                 events = self._event_listener.get(Event.MEMBER_UPDATED.value, [])
                 for event in events:
