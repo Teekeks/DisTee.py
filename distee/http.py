@@ -61,6 +61,8 @@ class MaybeUnlock:
 
 class HTTPClient:
 
+    request_listener = None
+
     def __init__(self, loop=None):
         self.loop = asyncio.get_event_loop() if loop is None else loop
         self.user_agent = 'DisTee v{version}'.format(version=utils.VERSION)
@@ -102,6 +104,8 @@ class HTTPClient:
                       route: Route,
                       form: Optional[Iterable[Dict[str, Any]]] = None,
                       **kwargs):
+        if self.request_listener is not None:
+            asyncio.ensure_future(self.request_listener(route))
         method = route.method
         bucket = route.bucket
         url = route.url
