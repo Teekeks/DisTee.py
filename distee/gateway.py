@@ -24,7 +24,9 @@ class HeartbeatThread(threading.Thread):
         self.interval = interval
         self._last_recv = time.perf_counter()
         self.heartbeat_timeout = 60
+        self.latency = float('inf')
         self._last_send = time.perf_counter()
+        self._last_ack = time.perf_counter()
 
     def run(self) -> None:
         while not self.stop_event.wait(self.interval):
@@ -49,6 +51,17 @@ class HeartbeatThread(threading.Thread):
             'op': self.ws.HEARTBEAT,
             'd': self.ws.sequence
         }
+
+    def tick(self):
+        self._last_recv = time.perf_counter()
+
+    def ack(self):
+        ack_time = time.perf_counter()
+        self._last_ack = ack_time
+        self.latency = ack_time - self._last_send
+        if self.latency > 10:
+            logging.warning(f'Can\'t keep up, gateway is {self.latency:,2f}s behind')
+        pass
 
     def stop(self):
         print('stopping heartbeat')
@@ -108,6 +121,9 @@ class DiscordWebSocket:
         if seq is not None:
             self.sequence = seq
 
+        if self.heartbeat_manager:
+            self.heartbeat_manager.tick()
+
         if op == self.HELLO:
             self.heartbeat_manager = HeartbeatThread(self, data.get('heartbeat_interval') / 1000.0)
             logging.debug('received hello, send heartbeat')
@@ -115,6 +131,8 @@ class DiscordWebSocket:
             self.heartbeat_manager.start()
             return
         if op == self.HEARTBEAT_ACK:
+            if self.heartbeat_manager:
+                self.heartbeat_manager.ack()
             # logging.debug('received heatbeat ack')
             return
         logging.debug(f'got Web Socket event: {str(msg)}')
