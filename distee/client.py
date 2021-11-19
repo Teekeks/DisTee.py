@@ -149,13 +149,13 @@ class Client:
     async def _on_guild_update(self, data: dict):
         g = Guild(**data, _client=self)
         old = self.get_guild(g.id)
-        self._guilds[g.id] = g
+        self._guilds[g.id].handle_guild_update(**data)
         for event in self._event_listener.get(Event.GUILD_UPDATED.value, []):
             asyncio.ensure_future(event(old, g))
 
     async def _on_message(self, data: dict):
         # lets check if we know that user
-        if self._users.get(data.get('author').get('id')) is None:
+        if self._users.get(int(data.get('author').get('id'))) is None:
             usr = User(**data.get('author'), _client=self)
             self._users[usr.id] = usr
         msg = Message(**data, _client=self)

@@ -168,6 +168,54 @@ class Guild(Snowflake):
             if self._client is not None:
                 self._client.add_user_to_cache(m_d.get('user'))
 
+    def handle_guild_update(self, **kwargs):
+        self.name = kwargs.get('name')
+        self.icon: str = f'https://cdn.discordapp.com/icons/{self.id}/{kwargs.get("icon")}.png'
+        self.splash: str = f'https://cdn.discordapp.com/splashes/{self.id}/{kwargs.get("splash")}.png'
+        self.discovery_splash: Optional[str] = f'https://cdn.discordapp.com/discovery-splashes/{self.id}/' \
+                                               f'{kwargs.get("discovery_splash")}' \
+            if kwargs.get("discovery_splash") is not None else None
+        self.owner_id: Snowflake = Snowflake(id=kwargs.get('owner_id'))
+        self.afk_channel_id: Optional[Snowflake] = Snowflake(id=kwargs.get('afk_channel_id')) \
+            if kwargs.get('afk_channel_id') is not None else None
+        self.afk_timeout: int = kwargs.get('afk_timeout')
+        self.widget_enabled: Optional[bool] = kwargs.get('widgets_enabled')
+        self.widget_channel_id: Optional[Snowflake] = Snowflake(id=kwargs.get('widget_channel_id')) \
+            if kwargs.get('widget_channel_id') is not None else None
+        self.verification_level: GuildVerificationLevel = GuildVerificationLevel(kwargs.get('verification_level'))
+        self.default_message_notifications: MessageNotificationLevel = \
+            MessageNotificationLevel(kwargs.get('default_message_notifications'))
+        self.explicit_content_filter: ExplicitContentFilterLevel = \
+            ExplicitContentFilterLevel(kwargs.get('explicit_content_filter'))
+        self.roles: Dict[int, Role] = {int(k.get('id')): Role(**k, _client=self._client, _guild=self) for k in kwargs.get('roles')}
+        self.emojis = []  # FIXME parse emojis
+        self.features: List[str] = kwargs.get('features')
+        self.mfa_level: MFALevel = MFALevel(kwargs.get('mfa_level'))
+        self.application_id: Optional[Snowflake] = Snowflake(id=kwargs.get('application_id')) \
+            if kwargs.get('application_id') is not None else None
+        self.system_channel_id: Optional[Snowflake] = Snowflake(id=kwargs.get('system_channel_id')) \
+            if kwargs.get('system_channel_id') is not None else None
+        self.system_channel_flags: SystemChannelFlags = SystemChannelFlags(kwargs.get('system_channel_flags'))
+        self.rules_channel_id: Optional[Snowflake] = Snowflake(id=kwargs.get('rules_channel_id')) \
+            if kwargs.get('rules_channel_id') is not None else None
+        self.max_presences: Optional[int] = kwargs.get('max_presences')
+        self.max_members: Optional[int] = kwargs.get('max_members')
+        self.vanity_url_code: Optional[str] = kwargs.get('vanity_url_code')
+        self.description: Optional[str] = kwargs.get('description')
+        self.banner: Optional[str] = f'https://cdn.discordapp.com/banners/{self.id}/{kwargs.get("banner")}.png' \
+            if kwargs.get("banner") is not None else None
+        self.premium_tier: PremiumTier = PremiumTier(kwargs.get('premium_tier'))
+        self.premium_subscription_count: Optional[int] = kwargs.get('premium_subscription_count')
+        self.preferred_locale: str = kwargs.get('preferred_locale')
+        self.public_updates_channel_id: Optional[Snowflake] = Snowflake(id=kwargs.get('public_updates_channel_id')) \
+            if kwargs.get('public_updates_channel_id') is not None else None
+        self.max_video_channel_users: Optional[int] = kwargs.get('max_video_channel_users')
+        self.approximate_member_count: Optional[int] = kwargs.get('approximate_member_count')
+        self.approximate_presence_count: Optional[int] = kwargs.get('approximate_presence_count')
+        self.welcome_screen = None  # FIXME parse welcome screen
+        self.nsfw_level: GuildNSFWLevel = GuildNSFWLevel(kwargs.get('nsfw_level'))
+        self.stickers = []  # FIXME parse stickers
+
     def get_channel(self, channel_id: Union[Snowflake, int]) -> Optional[Union[GuildChannel, TextChannel, VoiceChannel, Category]]:
         """Get Channel Object from cache if found, otherwise returns None"""
         return self._channels.get(channel_id.id if isinstance(channel_id, Snowflake) else channel_id)
