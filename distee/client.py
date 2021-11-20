@@ -235,8 +235,8 @@ class Client:
             ap.callback = callback
             self._application_commands[ap.id] = ap
         # call ready event
-        for g in data.get('guilds', []):
-            await self._register_guild_commands(int(g['id']))
+        # for g in data.get('guilds', []):
+        #     await self._register_guild_commands(int(g['id']))
         for event in self._event_listener.get(Event.READY.value, []):
             await event()
 
@@ -245,7 +245,7 @@ class Client:
         guild = self.get_guild(gid)
         member = Member(**data, _client=self, _guild=guild)
         guild._members[member.id] = member
-        self.add_user_to_cache(data)
+        self.add_user_to_cache(data.get('user'))
         for event in self._event_listener.get(Event.MEMBER_JOINED.value, []):
             await event(member)
 
