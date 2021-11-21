@@ -1,3 +1,6 @@
+import asyncio
+import logging
+
 from .http import Route
 from .utils import Snowflake
 from typing import Optional, List, Dict, Union
@@ -167,6 +170,25 @@ class Guild(Snowflake):
             self._members[m.id] = m
             if self._client is not None:
                 self._client.add_user_to_cache(m_d.get('user'))
+        if len(self._members.keys()) < self.member_count:
+            # we did not get them all, lets request them
+            asyncio.ensure_future(self.refresh_members())
+
+    async def refresh_members(self):
+        async def get_page(after=None):
+            return await self._client.http.request(Route('GET',
+                                                         '/guilds/{guild_id}/members?limit=1000' +
+                                                         (f'&after={after}' if after is not None else ''),
+                                                         guild_id=self.id))
+        page = await get_page()
+        a = None
+        while len(page) > 0:
+            for dat in page:
+                m = Member(**dat, _client=self._client, _guild=self)
+                self._members[m.id] = m
+                a = m.id
+            page = await get_page(a)
+        logging.info(f'filled member cache for guild {self.id}: got {len(self._members.keys())} members')
 
     def handle_guild_update(self, **kwargs):
         self.name = kwargs.get('name')
