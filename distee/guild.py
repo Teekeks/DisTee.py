@@ -170,9 +170,10 @@ class Guild(Snowflake):
             self._members[m.id] = m
             if self._client is not None:
                 self._client.add_user_to_cache(m_d.get('user'))
-        if len(self._members.keys()) < self.member_count:
-            # we did not get them all, lets request them
-            asyncio.ensure_future(self.refresh_members())
+        if self.member_count is not None:
+            if len(self._members.keys()) < self.member_count:
+                # we did not get them all, lets request them
+                asyncio.ensure_future(self.refresh_members())
 
     async def refresh_members(self):
         async def get_page(after=None):
