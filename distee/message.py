@@ -1,14 +1,14 @@
 import typing
 
 from .utils import Snowflake
-from .guild import Guild, Member
 from typing import Optional, Union, List
-from .user import User
 from .http import Route
 import json
 
 if typing.TYPE_CHECKING:
     from .channel import TextChannel
+    from .guild import Guild, Member
+    from .user import User
 
 
 class Message(Snowflake):

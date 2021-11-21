@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import typing
 
 from .http import Route
 from .utils import Snowflake
@@ -7,9 +8,14 @@ from typing import Optional, List, Dict, Union
 from .enums import GuildVerificationLevel, MessageNotificationLevel, ExplicitContentFilterLevel, MFALevel, PremiumTier
 from .enums import GuildNSFWLevel
 from .flags import SystemChannelFlags
-from .channel import GuildChannel, get_channel, TextChannel, VoiceChannel, Category
+from .channel import get_channel
 from .user import User
 from .role import Role
+
+if typing.TYPE_CHECKING:
+    from .channel import GuildChannel, TextChannel, VoiceChannel, Category
+    from .client import Client
+
 
 
 class Member(User):
