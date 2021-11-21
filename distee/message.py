@@ -1,5 +1,5 @@
 from .utils import Snowflake
-from .channel import TextChannel, MessageableChannel
+from .channel import TextChannel
 from .guild import Guild, Member
 from typing import Optional, Union, List
 from .user import User
@@ -19,7 +19,7 @@ class Message(Snowflake):
         self.flags = args.get('flags')
 
         self.guild: Optional[Guild] = self._client.get_guild(self.guild_id) if self._client is not None else None
-        self.channel: Optional[MessageableChannel] = self.guild.get_channel(self.channel_id) \
+        self.channel: Optional[TextChannel] = self.guild.get_channel(self.channel_id) \
             if self.guild is not None else None
         self.author: Optional[Union[User, Member]] = self.guild.get_member(self.author_id) \
             if self.guild is not None else None
