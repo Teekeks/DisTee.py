@@ -143,7 +143,7 @@ class Guild(Snowflake):
         self.large: Optional[bool] = kwargs.get('large')
         self.unavailable: Optional[bool] = kwargs.get('unavailable')
         self.member_count: Optional[int] = kwargs.get('member_count')
-        self._channels: Dict[int, GuildChannel] = {}
+        self._channels: Dict[int, 'GuildChannel'] = {}
         for cd in kwargs.get('channels', []):
             c = get_channel(**cd, _client=self._client, guild_id=self.id)
             self._channels[c.id] = c
@@ -245,7 +245,7 @@ class Guild(Snowflake):
         self.nsfw_level: GuildNSFWLevel = GuildNSFWLevel(kwargs.get('nsfw_level'))
         self.stickers = []  # FIXME parse stickers
 
-    def get_channel(self, channel_id: Union[Snowflake, int]) -> Optional[Union[GuildChannel, TextChannel, VoiceChannel, Category]]:
+    def get_channel(self, channel_id: Union[Snowflake, int]) -> Optional[Union['GuildChannel', 'TextChannel', 'VoiceChannel', 'Category']]:
         """Get Channel Object from cache if found, otherwise returns None"""
         return self._channels.get(channel_id.id if isinstance(channel_id, Snowflake) else channel_id)
 
