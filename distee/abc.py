@@ -1,6 +1,7 @@
 from typing import Optional, List, TYPE_CHECKING
 import json
 from distee.http import Route
+from distee.message import Message
 
 if TYPE_CHECKING:
     from distee.channel import MessageableChannel
@@ -37,7 +38,8 @@ class Messageable:
         if allowed_mentions is not None:
             payload['allowed_mentions'] = allowed_mentions
         form.append({'name': 'payload_json', 'value': json.dumps(payload)})
-        await self._client.http.request(Route('POST',
-                                              '/channels/{channel_id}/messages',
-                                              channel_id=channel.id),
-                                        form=form)
+        d = await self._client.http.request(Route('POST',
+                                                  '/channels/{channel_id}/messages',
+                                                  channel_id=channel.id),
+                                            form=form)
+        return Message(**d, _client=channel._client)

@@ -1,6 +1,7 @@
 import json
 
 from . import abc
+from .message import Message
 from .utils import Snowflake
 from .enums import ChannelType
 from typing import Optional, List, Union
@@ -45,31 +46,6 @@ class MessageableChannel(BaseChannel, abc.Messageable):
 
     async def _get_channel(self) -> 'MessageableChannel':
         return self
-
-    async def send(self,
-                   content: str = None,
-                   tts: bool = False,
-                   reply_to: 'Message' = None,
-                   embeds: Optional[List[dict]] = None,
-                   components: Optional[List] = None,
-                   allowed_mentions: Optional[dict] = None) -> 'Message':
-        payload = {'tts': tts}
-        form = []
-        if content is not None:
-            payload['content'] = content
-        if reply_to is not None:
-            payload['message_reference'] = self._get_reference(reply_to)
-        if embeds is not None:
-            payload['embeds'] = embeds
-        if components is not None:
-            payload['components'] = components
-        if allowed_mentions is not None:
-            payload['allowed_mentions'] = allowed_mentions
-        form.append({'name': 'payload_json', 'value': json.dumps(payload)})
-        gid = None
-        if isinstance(self, GuildChannel):
-            gid = self.guild_id.id
-        await self._client.http.request(Route('POST', f'/channels/{self.id}/messages', channel_id=self.id, guild_id=gid), form=form)
 
     async def delete_message(self, msg_id: Union[Snowflake, int], reason: Optional[str] = None):
         await self._client.http.request(Route('DELETE',
