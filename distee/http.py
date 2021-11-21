@@ -165,7 +165,7 @@ class HTTPClient:
                                 # this is cloudflare :(
                                 raise HTTPException(r, data)
 
-                            retry_after = float(data['retry_after']) / 1000.0
+                            retry_after = float(data['retry_after'])
                             logging.warning(f'We are being rate limited. Retrying in {retry_after:.2f} seconds. Bucket: {bucket}')
                             is_global = data.get('global', False)
                             if is_global:
