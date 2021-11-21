@@ -255,6 +255,13 @@ class Guild(Snowflake):
         self._members[member.id] = member
         return member
 
+    async def obtain_member(self, member_id: Union[Snowflake, int]) -> Member:
+        """Either get from cache or fetch if not in cache"""
+        m = self.get_member(member_id)
+        if m is None:
+            return await self.fetch_member(member_id)
+        return m
+
     def get_role(self, role_id: Union[Snowflake, int]) -> Optional[Role]:
         return self.roles.get(role_id.id if isinstance(role_id, Snowflake) else role_id)
 

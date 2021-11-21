@@ -408,8 +408,8 @@ class Client:
 # Fetcher
 ########################################################################################################################
 
-    async def fetch_user(self, uid: Snowflake) -> User:
-        data = await self.http.request(Route('GET', f'/users/{uid.id}'))
+    async def fetch_user(self, uid: Union[Snowflake, int]) -> User:
+        data = await self.http.request(Route('GET', '/users/{user_id}', user_id=uid))
         user = User(**data, _client=self)
         self.add_user_to_cache(user)
         return user
@@ -419,6 +419,13 @@ class Client:
 
     def get_user(self, s: Union[Snowflake, int]) -> Optional[User]:
         return self._users.get(s.id if isinstance(s, Snowflake) else s)
+
+    async def obtain_user(self, s: Union[Snowflake, int]) -> User:
+        """Either get user from cache or fetch if not cached"""
+        u = self.get_user(s)
+        if u is None:
+            return await self.fetch_user(s)
+        return u
 
     def get_application_commands(self, name: str, _type: ApplicationCommandType) -> Optional[ApplicationCommand]:
         for ac in self._application_commands.values():
@@ -451,6 +458,12 @@ class Client:
     async def fetch_guild(self, s: Union[Snowflake, int]) -> Guild:
         data = await self.http.request(Route('GET', '/guilds/{guild_id}', guild_id=s))
         return Guild(**data, _client=self)
+
+    async def obtain_guild(self, s: Union[Snowflake, int]) -> Guild:
+        g = self.get_guild(s)
+        if g is None:
+            return await self.fetch_guild(s)
+        return g
 
 ########################################################################################################################
 # Command registration
