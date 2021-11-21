@@ -1,11 +1,14 @@
 import json
+import typing
 
 from . import abc
-from .message import Message
 from .utils import Snowflake
 from .enums import ChannelType
 from typing import Optional, List, Union
 from .http import Route
+
+if typing.TYPE_CHECKING:
+    from distee.message import Message
 
 
 class BaseChannel(Snowflake):
