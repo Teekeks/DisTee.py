@@ -1,11 +1,11 @@
 from typing import Optional, List, TYPE_CHECKING, Union
 import json
 from distee.http import Route
-from distee.message import Message
 from distee.utils import Snowflake
 
 if TYPE_CHECKING:
     from distee.channel import MessageableChannel
+    from distee.message import Message
 
 class Messageable:
 
