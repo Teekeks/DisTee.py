@@ -3,7 +3,7 @@ from .http import Route
 from .utils import Snowflake, snowflake_or_none, get_json_from_dict
 from .enums import InteractionType, ApplicationCommandType, InteractionResponseType, ComponentType
 from .flags import InteractionCallbackFlags
-from typing import Optional, List
+from typing import Optional, List, Dict
 from .guild import Member
 from .user import User
 from .message import Message
@@ -148,3 +148,12 @@ class Interaction(Snowflake):
                                               interaction_id=self.id,
                                               interaction_token=self.token),
                                         json=json)
+
+    async def send_modal(self, data: Dict):
+        json = {'type': 9,
+                'data': data}
+        await self._client.http.request(Route('POST',
+                                              '/interactions/{interaction_id}/{interaction_token}/callback',
+                                              interaction_id=self.id,
+                                              interaction_token=self.token),
+                                        form=[{'name': 'payload_json', 'value': get_json_from_dict(json)}])
