@@ -10,7 +10,7 @@ from .gateway import DiscordWebSocket
 from .role import Role
 from .user import User
 from .http import HTTPClient, Route
-from .errors import ClientException, ReconnectWebSocket, ConnectionClosed
+from .errors import ClientException, ReconnectWebSocket, ConnectionClosed, PriviledgedIntentsRequired
 from .message import Message
 from .utils import Snowflake
 from .flags import Intents
@@ -312,20 +312,38 @@ class Client:
         while not self.is_closed():
             try:
                 await self.ws.run(resume=resume)
-            except ReconnectWebSocket:
-                logging.info(f'Trying to resume session...')
-                resume = True
+            except ReconnectWebSocket as e:
+                resume = e.resume
+                if resume:
+                    logging.info(f'Trying to resume session...')
+                else:
+                    logging.info('Reconnect')
+                continue
             except (ConnectionClosed,
                     OSError,
                     aiohttp.ClientError,
-                    asyncio.TimeoutError):
+                    asyncio.TimeoutError) as ex:
                 if self.is_closed():
                     return
+
+                if isinstance(ex, OSError) and ex.errno in (54, 10054):
+                    resume = True
+                    continue
+                if isinstance(ex, ConnectionClosed):
+                    if ex.code == 4014:
+                        raise PriviledgedIntentsRequired() from None
+                    if ex.code != 1000:
+                        await self.close()
+                        raise
             except asyncio.exceptions.CancelledError:
                 await self.close()
             except:
                 logging.exception('unhandled exception, lets try a reconnect')
                 await self.close()
+            retry_delay = 2.0
+            logging.exception(f'Attempting to reconnect in {retry_delay:.2f}s')
+            await asyncio.sleep(retry_delay)
+            resume = True
 
     async def start(self, token: str):
         await self.login(token)
@@ -355,7 +373,6 @@ class Client:
                 await self.start(token)
             finally:
                 if not self.is_closed():
-                    print('1')
                     await self.close()
 
         def stop_loop_on_completion(f):

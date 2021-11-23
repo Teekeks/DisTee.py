@@ -1,3 +1,5 @@
+from aiohttp import ClientWebSocketResponse
+
 
 def flatten_error_dict(d, key=''):
     items = []
@@ -65,10 +67,16 @@ class WebSocketClosure(Exception):
 
 
 class ReconnectWebSocket(Exception):
+
+    def __init__(self, *, resume=True):
+        self.resume = resume
     pass
 
 
 class ConnectionClosed(Exception):
+
+    def __init__(self, socket: ClientWebSocketResponse, *, code=None):
+        self.code = code or socket.close_code or -1
     pass
 
 
@@ -77,4 +85,7 @@ class InteractionException(Exception):
 
 
 class WrongInteractionTypeException(InteractionException):
+    pass
+
+class PriviledgedIntentsRequired(Exception):
     pass

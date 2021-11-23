@@ -89,6 +89,7 @@ class DiscordWebSocket:
     _buffer = bytearray()
     sequence = None
     session_id = None
+    _close_code = None
 
     def __init__(self, client):
         self.client = client
@@ -97,9 +98,11 @@ class DiscordWebSocket:
         pass
 
     async def send_as_json(self, payload: dict):
-        # logging.debug(f'sending payload {str(payload)}')
-        await self.socket.send_json(payload)
-        pass
+        try:
+            await self.socket.send_json(payload)
+        except RuntimeError as e:
+            if not self._can_handle_close():
+                raise ConnectionClosed(self.socket) from e
 
     async def handle_message(self, data):
         if type(data) is bytes:
@@ -153,16 +156,25 @@ class DiscordWebSocket:
             else:
                 logging.debug(f'got event: {event} (data: {str(data)})')
             self.loop.create_task(self.client.dispatch_gateway_event(event, data))
-        pass
+            return
+        if op == self.INVALID_SESSION:
+            if data is True:
+                await self.close()
+                raise ReconnectWebSocket()
+            self.sequence = None
+            self.session_id = None
+            logging.info(f'session has been invalidated')
+            await self.close(code=1000)
+            raise ReconnectWebSocket(resume=False)
+        logging.warning(f'unknown OP code {op}')
 
-    async def close(self):
+    async def close(self, code=4000):
         print('closing websocket')
         if self.heartbeat_manager:
             self.heartbeat_manager.stop()
             self.heartbeat_manager = None
-        if not self.client.is_closed():
-            if not self.socket.closed:
-                await self.socket.close(code=4000)
+        self._close_code = code
+        await self.socket.close(code=code)
 
     async def send_heartbeat(self):
         await self.send_as_json(self.heartbeat_manager.get_payload())
@@ -191,12 +203,13 @@ class DiscordWebSocket:
             if isinstance(e, asyncio.TimeoutError):
                 logging.info('Timed our receiving packet. Attempting to reconnect.')
                 raise ReconnectWebSocket() from None
+            code = self._close_code or self.socket.close_code
             if self._can_handle_close():
                 logging.info(f'Websocket closed with {self.socket.close_code}, attempting a reconnect.')
                 raise ReconnectWebSocket() from None
             else:
                 logging.info(f'Websocket closed with {self.socket.close_code}. can not reconnect')
-                raise ConnectionClosed() from None
+                raise ConnectionClosed(self.socket, code=code) from None
             pass
 
         pass
@@ -234,6 +247,7 @@ class DiscordWebSocket:
         await self.send_as_json(d)
 
     async def run(self, resume=False):
+        self._close_code = None
         self._zlib = zlib.decompressobj()
         self._buffer = bytearray()
         gateway = await self.client.http.get_gateway()
