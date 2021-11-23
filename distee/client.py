@@ -76,22 +76,25 @@ class Client:
 
     def __init__(self):
         self.ws = None
+        self.build_member_cache: bool = True
         self.http = HTTPClient()
         self.loop = asyncio.get_event_loop()
         self.intents: Intents = None
         self.application: Application = None
-        self.register_raw_gateway_event_listener('MESSAGE_CREATE', self._on_message)
-        self.register_raw_gateway_event_listener('GUILD_CREATE', self._on_guild_create)
-        self.register_raw_gateway_event_listener('GUILD_MEMBER_ADD', self._on_member_join)
         self.register_raw_gateway_event_listener('READY', self._on_ready)
-        self.register_raw_gateway_event_listener('INTERACTION_CREATE', self._on_interaction_create)
+        self.register_raw_gateway_event_listener('GUILD_CREATE', self._on_guild_create)
         self.register_raw_gateway_event_listener('GUILD_DELETE', self._on_guild_delete)
-        self.register_raw_gateway_event_listener('GUILD_MEMBER_UPDATE', self._on_guild_member_update)
         self.register_raw_gateway_event_listener('GUILD_UPDATE', self._on_guild_update)
+        self.register_raw_gateway_event_listener('GUILD_MEMBER_ADD', self._on_member_join)
+        self.register_raw_gateway_event_listener('GUILD_MEMBER_UPDATE', self._on_guild_member_update)
+        self.register_raw_gateway_event_listener('GUILD_MEMBER_REMOVE', self._on_guild_member_remove)
+        self.register_raw_gateway_event_listener('GUILD_MEMBERS_CHUNK', self._on_guild_member_chunk)
         self.register_raw_gateway_event_listener('GUILD_ROLE_CREATE', self._on_guild_role_create)
         self.register_raw_gateway_event_listener('GUILD_ROLE_DELETE', self._on_guild_role_delete)
         self.register_raw_gateway_event_listener('GUILD_ROLE_UPDATE', self._on_guild_role_update)
         self.register_raw_gateway_event_listener('VOICE_STATE_UPDATE', self._on_voice_state_update)
+        self.register_raw_gateway_event_listener('MESSAGE_CREATE', self._on_message)
+        self.register_raw_gateway_event_listener('INTERACTION_CREATE', self._on_interaction_create)
 
     def is_closed(self) -> bool:
         """Returns whether or not this client is closing down"""
@@ -168,6 +171,10 @@ class Client:
         for event in events:
             asyncio.ensure_future(event(msg))
 
+    async def _on_guild_member_chunk(self, data: dict):
+        guild = self.get_guild(int(data['guild_id']))
+        await guild.handle_member_chunk(data)
+
     async def _on_guild_member_update(self, data: dict):
         try:
             guild = self.get_guild(int(data.get('guild_id')))
@@ -187,6 +194,13 @@ class Client:
         except:
             logging.exception('Exception while handling guild member update')
         pass
+
+    async def _on_guild_member_remove(self, data: dict):
+        guild = self.get_guild(int(data['guild_id']))
+        member = guild.get_member(int(data['user']['id']))
+        for event in self._event_listener.get(Event.MEMBER_REMOVED.value, []):
+            asyncio.ensure_future(event(member))
+        guild._members.pop(int(data['user']['id']), None)
 
     async def _on_interaction_create(self, data: dict):
         try:
@@ -214,6 +228,8 @@ class Client:
     async def _on_ready(self, data: dict):
         for g in data.get('guilds', []):
             self._guilds[int(g['id'])] = None
+            if self.build_member_cache:
+                await self.ws.request_guild_members(int(g['id']))
         # register global commands
         globals_to_override = []
         for c in self._command_registrar:

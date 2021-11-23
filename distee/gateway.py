@@ -235,6 +235,18 @@ class DiscordWebSocket:
         await self.send_as_json(d)
         pass
 
+    async def request_guild_members(self, gid: int):
+        d = {
+            'op': self.REQUEST_GUILD_MEMBERS,
+            'd': {
+                'guild_id': gid,
+                'limit': 0,
+                'query': '',
+                'presences': False
+            }
+        }
+        await self.send_as_json(d)
+
     async def resume(self):
         d = {
             'op': self.RESUME,

@@ -101,6 +101,7 @@ class Event(Enum):
     GUILD_LEFT = 'guild_left'
     MEMBER_JOINED = 'member_joined'
     MEMBER_UPDATED = 'member_updated'
+    MEMBER_REMOVED = 'member_removed'
 
     GUILD_UPDATED = 'guild_updated'
     GUILD_ROLE_CREATED = 'guild_role_created'
