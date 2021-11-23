@@ -1,6 +1,9 @@
 import asyncio
 import json
-from typing import Optional, Iterable, Dict, Any
+import typing
+from typing import Optional, Iterable, Dict, Any, List
+
+
 from .utils import Snowflake
 import aiohttp
 from aiohttp import ClientSession, ClientResponse
@@ -8,6 +11,10 @@ from . import utils
 from .errors import HTTPException, GatewayNotFound, Forbidden, NotFound, DiscordServerError
 import logging
 from pprint import pprint
+
+if typing.TYPE_CHECKING:
+    from .file import File
+    from .message import Message
 
 
 async def get_json_or_str(response: ClientResponse):
@@ -65,7 +72,7 @@ class HTTPClient:
 
     def __init__(self, loop=None):
         self.loop = asyncio.get_event_loop() if loop is None else loop
-        self.user_agent = 'DisTee v{version}'.format(version=utils.VERSION)
+        self.user_agent = 'DiscordBot (https://github.com/Teekeks/DisTee.py v{version})'.format(version=utils.VERSION)
         self.__session: Optional[ClientSession] = None
         self.token: Optional[str] = None
         self._locks = {}
@@ -100,9 +107,56 @@ class HTTPClient:
     async def ws_connect(self, url: str):
         return await self.__session.ws_connect(url, timeout=30)
 
+    async def send_multipart(self,
+                             route: Route,
+                             *,
+                             files: List['File'] = None,
+                             content: Optional[str] = None,
+                             tts: bool = False,
+                             embeds: Optional[Dict] = None,
+                             nonce: Optional[str] = None,
+                             allowed_mentions: Optional[Dict] = None,
+                             message_reference: Optional[Dict] = None,
+                             stickers: Optional[List] = None,
+                             components: Optional[List] = None):
+        payload = {'tts': tts}
+        form = []
+        if content is not None:
+            payload['content'] = content
+        if message_reference is not None:
+            payload['message_reference'] = message_reference
+        if embeds is not None:
+            payload['embeds'] = embeds
+        if components is not None:
+            payload['components'] = components
+        if allowed_mentions is not None:
+            payload['allowed_mentions'] = allowed_mentions
+        if nonce is not None:
+            payload['nonce'] = nonce
+        if stickers is not None:
+            payload['sticker_ids'] = stickers
+        if files is not None:
+            if len(files) == 1:
+                payload['attachments'] = [{
+                    'id': 0,
+                    'description': files[0].description
+                }]
+        form.append({'name': 'payload_json', 'value': json.dumps(payload)})
+        if len(files) == 1:
+            file = files[0]
+            form.append({
+                'name': 'files[0]',
+                'value': file.fp,
+                'filename': file.filename,
+                'content_type': 'application/octet-stream',
+                'content_transfer_encoding': 'binary'
+            })
+        await self.request(route, form=form, files=files)
+
     async def request(self,
                       route: Route,
                       form: Optional[Iterable[Dict[str, Any]]] = None,
+                      files: Optional[Iterable['File']] = None,
                       **kwargs):
         if self.request_listener is not None:
             asyncio.ensure_future(self.request_listener(route))
@@ -130,12 +184,6 @@ class HTTPClient:
             headers['Content-Type'] = 'application/json'
             kwargs['data'] = json.dumps(kwargs.pop('json'))
 
-        if form is not None:
-            form_data = aiohttp.FormData()
-            for p in form:
-                form_data.add_field(**p)
-            kwargs['data'] = form_data
-
         # wait for a global api lock to be over :(
         if not self._global_lock_over.is_set():
             await self._global_lock_over.wait()
@@ -144,6 +192,16 @@ class HTTPClient:
         with MaybeUnlock(lock) as maybe_unlock:
             for tries in range(5):
                 try:
+                    if files is not None:
+                        for f in files:
+                            f.reset(seek=tries)
+
+                    if form is not None:
+                        form_data = aiohttp.FormData(quote_fields=False)
+                        for p in form:
+                            form_data.add_field(**p)
+                        kwargs['data'] = form_data
+
                     async with self.__session.request(method=method, url=url, **kwargs) as r:
                         logging.debug(f'{method} {url} with {str(kwargs.get("data"))} has returned {r.status}')
                         data = await get_json_or_str(r)
