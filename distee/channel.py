@@ -41,12 +41,6 @@ class Category(GuildChannel):
 class MessageableChannel(BaseChannel, abc.Messageable):
     """Any channel that can contain text"""
 
-    def _get_reference(self, msg: 'Message') -> dict:
-        return {
-            'message_id': msg.id,
-            'channel_id': msg.channel_id.id
-        }
-
     async def _get_channel(self) -> 'MessageableChannel':
         return self
 

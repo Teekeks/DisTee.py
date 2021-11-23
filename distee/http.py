@@ -15,6 +15,7 @@ from pprint import pprint
 if typing.TYPE_CHECKING:
     from .file import File
     from .message import Message
+    from .client import Client
 
 
 async def get_json_or_str(response: ClientResponse):
@@ -70,7 +71,8 @@ class HTTPClient:
 
     request_listener = None
 
-    def __init__(self, loop=None):
+    def __init__(self, client: 'Client', loop=None):
+        self.client: 'Client' = client
         self.loop = asyncio.get_event_loop() if loop is None else loop
         self.user_agent = 'DiscordBot (https://github.com/Teekeks/DisTee.py v{version})'.format(version=utils.VERSION)
         self.__session: Optional[ClientSession] = None
@@ -107,6 +109,50 @@ class HTTPClient:
     async def ws_connect(self, url: str):
         return await self.__session.ws_connect(url, timeout=30)
 
+    async def send_message(self,
+                           route: Route,
+                           *,
+                           files: List['File'] = None,
+                           content: Optional[str] = None,
+                           tts: bool = False,
+                           embeds: Optional[Dict] = None,
+                           nonce: Optional[str] = None,
+                           allowed_mentions: Optional[Dict] = None,
+                           message_reference: Optional[Dict] = None,
+                           stickers: Optional[List] = None,
+                           components: Optional[List] = None) -> Message:
+        if files is not None:
+            return await self.send_multipart(route,
+                                             files=files,
+                                             content=content,
+                                             tts=tts,
+                                             embeds=embeds,
+                                             nonce=nonce,
+                                             allowed_mentions=allowed_mentions,
+                                             message_reference=message_reference,
+                                             stickers=stickers,
+                                             components=components)
+
+        payload = {'tts': tts}
+        form = []
+        if content is not None:
+            payload['content'] = content
+        if message_reference is not None:
+            payload['message_reference'] = message_reference
+        if embeds is not None:
+            payload['embeds'] = embeds
+        if components is not None:
+            payload['components'] = components
+        if allowed_mentions is not None:
+            payload['allowed_mentions'] = allowed_mentions
+        if nonce is not None:
+            payload['nonce'] = nonce
+        if stickers is not None:
+            payload['sticker_ids'] = stickers
+        form.append({'name': 'payload_json', 'value': json.dumps(payload)})
+        d = await self.request(route, form=form)
+        return Message(**d, _client=self.client)
+
     async def send_multipart(self,
                              route: Route,
                              *,
@@ -118,7 +164,7 @@ class HTTPClient:
                              allowed_mentions: Optional[Dict] = None,
                              message_reference: Optional[Dict] = None,
                              stickers: Optional[List] = None,
-                             components: Optional[List] = None):
+                             components: Optional[List] = None) -> 'Message':
         payload = {'tts': tts}
         form = []
         if content is not None:
@@ -151,7 +197,8 @@ class HTTPClient:
                 'content_type': 'application/octet-stream',
                 'content_transfer_encoding': 'binary'
             })
-        await self.request(route, form=form, files=files)
+        d = await self.request(route, form=form, files=files)
+        return Message(**d, _client=self.client)
 
     async def request(self,
                       route: Route,

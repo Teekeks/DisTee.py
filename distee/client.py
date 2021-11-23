@@ -77,7 +77,7 @@ class Client:
     def __init__(self):
         self.ws = None
         self.build_member_cache: bool = True
-        self.http = HTTPClient()
+        self.http = HTTPClient(self)
         self.loop = asyncio.get_event_loop()
         self.intents: Intents = None
         self.application: Application = None
