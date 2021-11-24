@@ -1,3 +1,5 @@
+import typing
+
 from .errors import WrongInteractionTypeException
 from .http import Route
 from .utils import Snowflake, snowflake_or_none, get_json_from_dict
@@ -8,6 +10,9 @@ from .guild import Member
 from .user import User
 from .message import Message
 from .channel import BaseChannel, get_channel
+
+if typing.TYPE_CHECKING:
+    from .file import File
 
 
 class InteractionData(Snowflake):
@@ -99,6 +104,8 @@ class Interaction(Snowflake):
                    embeds: Optional[List[dict]] = None,
                    allowed_mentions: Optional[dict] = None,
                    components: Optional[List[dict]] = None,
+                   stickers: Optional[List] = None,
+                   nonce: Optional[str] = None,
                    ephemeral: Optional[bool] = None):
         """ACK interaction and send a message as response"""
         json = {'type': InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE.value,
@@ -108,6 +115,8 @@ class Interaction(Snowflake):
                         'tts': tts,
                         'components': components,
                         'embeds': embeds,
+                        'sticker_ids': stickers,
+                        'nonce': nonce,
                         'allowed_mentions': allowed_mentions
                     }.items() if v is not None}}
         await self._client.http.request(Route('POST',
@@ -117,27 +126,29 @@ class Interaction(Snowflake):
                                         json=json)
 
     async def send_followup(self,
-                            tts: Optional[bool] = None,
-                            content: Optional[str] = None,
+                            content: str = None,
+                            tts: bool = False,
                             embeds: Optional[List[dict]] = None,
+                            components: Optional[List] = None,
                             allowed_mentions: Optional[dict] = None,
-                            components: Optional[List[dict]] = None,
+                            stickers: Optional[List] = None,
+                            nonce: Optional[str] = None,
+                            files: Optional['File'] = None,
                             ephemeral: Optional[bool] = None):
         """send a followup message after deferring it"""
-        json = {k: v for k, v in {
-                    'content': content,
-                    'flags': 1 << 6 if ephemeral else None,
-                    'tts': tts,
-                    'components': components,
-                    'embeds': embeds,
-                    'allowed_mentions': allowed_mentions
-                }.items() if v is not None}
-        data = await self._client.http.request(Route('POST',
-                                                     '/webhooks/{application_id}/{interaction_token}',
-                                                     application_id=self.application_id,
-                                                     interaction_token=self.token),
-                                               form=[{'name': 'payload_json', 'value': get_json_from_dict(json)}])
-        return Message(**data, _client=self._client)
+        return await self._client.http.send_message(Route('POST',
+                                                          '/webhooks/{application_id}/{interaction_token}',
+                                                          application_id=self.application_id,
+                                                          interaction_token=self.token),
+                                                    components=components,
+                                                    content=content,
+                                                    tts=tts,
+                                                    embeds=embeds,
+                                                    allowed_mentions=allowed_mentions,
+                                                    flags=1 << 6 if ephemeral else None,
+                                                    stickers=stickers,
+                                                    nonce=nonce,
+                                                    files=files)
 
     async def defer_send(self, ephemeral: Optional[bool] = None):
         """ACK now and use send later"""
@@ -150,7 +161,7 @@ class Interaction(Snowflake):
                                         json=json)
 
     async def send_modal(self, data: Dict):
-        json = {'type': 9,
+        json = {'type': InteractionResponseType.MODAL.value,
                 'data': data}
         await self._client.http.request(Route('POST',
                                               '/interactions/{interaction_id}/{interaction_token}/callback',

@@ -120,7 +120,8 @@ class HTTPClient:
                            allowed_mentions: Optional[Dict] = None,
                            message_reference: Optional[Dict] = None,
                            stickers: Optional[List] = None,
-                           components: Optional[List] = None) -> Message:
+                           components: Optional[List] = None,
+                           flags: Optional[int] = None) -> Message:
         if files is not None:
             return await self.send_multipart(route,
                                              files=files,
@@ -131,7 +132,8 @@ class HTTPClient:
                                              allowed_mentions=allowed_mentions,
                                              message_reference=message_reference,
                                              stickers=stickers,
-                                             components=components)
+                                             components=components,
+                                             flags=flags)
 
         payload = {'tts': tts}
         form = []
@@ -149,6 +151,8 @@ class HTTPClient:
             payload['nonce'] = nonce
         if stickers is not None:
             payload['sticker_ids'] = stickers
+        if flags is not None:
+            payload['flags'] = flags
         form.append({'name': 'payload_json', 'value': json.dumps(payload)})
         d = await self.request(route, form=form)
         return Message(**d, _client=self.client)
@@ -164,7 +168,8 @@ class HTTPClient:
                              allowed_mentions: Optional[Dict] = None,
                              message_reference: Optional[Dict] = None,
                              stickers: Optional[List] = None,
-                             components: Optional[List] = None) -> 'Message':
+                             components: Optional[List] = None,
+                             flags: Optional[int] = None) -> 'Message':
         payload = {'tts': tts}
         form = []
         if content is not None:
@@ -181,6 +186,8 @@ class HTTPClient:
             payload['nonce'] = nonce
         if stickers is not None:
             payload['sticker_ids'] = stickers
+        if flags is not None:
+            payload['flags'] = flags
         if files is not None:
             if len(files) == 1:
                 payload['attachments'] = [{

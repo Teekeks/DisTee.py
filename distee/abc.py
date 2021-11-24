@@ -29,7 +29,8 @@ class Messageable:
                    allowed_mentions: Optional[dict] = None,
                    stickers: Optional[List] = None,
                    nonce: Optional[str] = None,
-                   files: Optional['File'] = None) -> 'Message':
+                   files: Optional['File'] = None,
+                   flags: Optional[int] = None) -> 'Message':
         channel = await self._get_channel()
         return await self._client.http.send_message(Route('POST',
                                                           '/channels/{channel_id}/messages',
@@ -42,7 +43,8 @@ class Messageable:
                                                     allowed_mentions=allowed_mentions,
                                                     message_reference=self._get_reference(reply_to),
                                                     stickers=stickers,
-                                                    components=components)
+                                                    components=components,
+                                                    flags=flags)
 
     async def edit_message(self, msg_id: Optional[Union[int, Snowflake]],
                            content: str = None,
