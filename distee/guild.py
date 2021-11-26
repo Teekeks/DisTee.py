@@ -2,7 +2,7 @@ import asyncio
 import logging
 import typing
 
-from .http import Route
+from .route import Route
 from .utils import Snowflake
 from typing import Optional, List, Dict, Union
 from .enums import GuildVerificationLevel, MessageNotificationLevel, ExplicitContentFilterLevel, MFALevel, PremiumTier

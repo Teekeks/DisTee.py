@@ -1,6 +1,6 @@
 from typing import Optional, List, TYPE_CHECKING, Union
 import json
-from distee.http import Route
+from distee.route import Route
 from distee.utils import Snowflake
 from distee.message import Message
 

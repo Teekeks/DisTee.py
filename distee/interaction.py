@@ -1,7 +1,7 @@
 import typing
 
 from .errors import WrongInteractionTypeException
-from .http import Route
+from .route import Route
 from .utils import Snowflake, snowflake_or_none, get_json_from_dict
 from .enums import InteractionType, ApplicationCommandType, InteractionResponseType, ComponentType
 from .flags import InteractionCallbackFlags

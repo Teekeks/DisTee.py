@@ -2,7 +2,7 @@ from .utils import Snowflake
 from .enums import ApplicationCommandType, ApplicationCommandOptionType
 from typing import Optional, List, Union
 from .guild import Guild
-from .http import Route
+from .route import Route
 
 
 class ApplicationCommandOptionChoice:

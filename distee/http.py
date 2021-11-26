@@ -11,10 +11,11 @@ from . import utils
 from .errors import HTTPException, GatewayNotFound, Forbidden, NotFound, DiscordServerError
 import logging
 from pprint import pprint
+from .message import Message
+from .route import Route
 
 if typing.TYPE_CHECKING:
     from .file import File
-    from .message import Message
     from .client import Client
 
 
@@ -24,30 +25,6 @@ async def get_json_or_str(response: ClientResponse):
     if ct is not None and ct == 'application/json':
         return json.loads(text)
     return text
-
-
-class Route:
-    BASE_URL = f'https://discord.com/api/v{utils.API_VERSION}'
-
-    def __init__(self, method: str, path: str, **parameters):
-        self.path = path
-        self.method = method
-        self.url = self.BASE_URL + self.path
-
-        if parameters:
-            for k, v in parameters.items():
-                self.url = self.url.replace('{'+k+'}', str(v.id) if isinstance(v, Snowflake) else str(v))
-
-        self.channel_id = parameters.get('channel_id')
-        if isinstance(self.channel_id, Snowflake):
-            self.channel_id = self.channel_id.id
-        self.guild_id = parameters.get('guild_id')
-        if isinstance(self.guild_id, Snowflake):
-            self.guild_id = self.guild_id.id
-
-    @property
-    def bucket(self):
-        return f'{self.channel_id}:{self.guild_id}:{self.path}'
 
 
 class MaybeUnlock:
@@ -108,6 +85,36 @@ class HTTPClient:
 
     async def ws_connect(self, url: str):
         return await self.__session.ws_connect(url, timeout=30)
+
+    async def edit_message(self,
+                           route: Route,
+                           *,
+                           files: List['File'] = None,
+                           content: Optional[str] = None,
+                           tts: bool = False,
+                           embeds: Optional[Dict] = None,
+                           nonce: Optional[str] = None,
+                           allowed_mentions: Optional[Dict] = None,
+                           message_reference: Optional[Dict] = None,
+                           stickers: Optional[List] = None,
+                           components: Optional[List] = None,
+                           flags: Optional[int] = None) -> 'Message':
+        payload = {'tts': tts}
+        form = []
+        if content is not None:
+            payload['content'] = content
+        if message_reference is not None:
+            payload['message_reference'] = message_reference
+        if embeds is not None:
+            payload['embeds'] = embeds
+        if components is not None:
+            payload['components'] = components
+        if allowed_mentions is not None:
+            payload['allowed_mentions'] = allowed_mentions
+        form.append({'name': 'payload_json', 'value': json.dumps(payload)})
+        data = await self.http.request(route, form=form)
+        return Message(**data, _client=self._client)
+    pass
 
     async def send_message(self,
                            route: Route,

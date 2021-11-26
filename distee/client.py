@@ -9,7 +9,7 @@ import aiohttp
 from .gateway import DiscordWebSocket
 from .role import Role
 from .user import User
-from .http import HTTPClient, Route
+from .route import HTTPClient, Route
 from .errors import ClientException, ReconnectWebSocket, ConnectionClosed, PriviledgedIntentsRequired
 from .message import Message
 from .utils import Snowflake

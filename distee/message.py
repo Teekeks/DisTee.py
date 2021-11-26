@@ -2,7 +2,7 @@ import typing
 
 from .utils import Snowflake
 from typing import Optional, Union, List
-from .http import Route
+from .route import Route
 import json
 
 if typing.TYPE_CHECKING:
@@ -53,26 +53,15 @@ class Message(Snowflake):
                    embeds: Optional[List[dict]] = None,
                    components: Optional[List] = None,
                    allowed_mentions: Optional[dict] = None) -> 'Message':
-        payload = {'tts': tts}
-        form = []
-        if content is not None:
-            payload['content'] = content
-        if reply_to is not None:
-            payload['message_reference'] = self._get_reference(reply_to)
-        if embeds is not None:
-            payload['embeds'] = embeds
-        if components is not None:
-            payload['components'] = components
-        if allowed_mentions is not None:
-            payload['allowed_mentions'] = allowed_mentions
-        form.append({'name': 'payload_json', 'value': json.dumps(payload)})
-        gid = self.guild_id.id if self.guild_id is not None else None
-        data = await self._client.http.request(Route('PATCH',
-                                                     f'/channels/{self.channel_id.id}/messages/{self.id}',
-                                                     channel_id=self.channel_id.id,
-                                                     guild_id=gid),
-                                               form=form)
-        return Message(**data, _client=self._client)
+        return await self._client.http.edit_message(Route('PATCH',
+                                                          f'/channels/{self.channel_id.id}/messages/{self.id}',
+                                                          channel_id=self.channel_id.id),
+                                                    content=content,
+                                                    tts=tts,
+                                                    message_reference=self._get_reference(reply_to) if reply_to is not None else None,
+                                                    embeds=embeds,
+                                                    components=components,
+                                                    allowed_mentions=allowed_mentions)
 
     async def delete(self, reason: Optional[str] = None):
         await self._client.http.request(Route('DELETE',

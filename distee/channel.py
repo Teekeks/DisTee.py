@@ -5,7 +5,7 @@ from . import abc
 from .utils import Snowflake
 from .enums import ChannelType
 from typing import Optional, List, Union
-from .http import Route
+from .route import Route
 
 if typing.TYPE_CHECKING:
     from distee.message import Message
