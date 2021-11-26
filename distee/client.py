@@ -228,8 +228,6 @@ class Client:
     async def _on_ready(self, data: dict):
         for g in data.get('guilds', []):
             self._guilds[int(g['id'])] = None
-            if self.build_member_cache:
-                await self.ws.request_guild_members(int(g['id']))
         # register global commands
         globals_to_override = []
         for c in self._command_registrar:
@@ -272,6 +270,8 @@ class Client:
             for event in self._event_listener.get(Event.GUILD_JOINED.value, []):
                 await event(g)
         self._guilds[g.id] = g
+        if self.build_member_cache:
+            await self.ws.request_guild_members(g.id)
         # register server specific commands on join
         await self._register_guild_commands(g.id)
 
