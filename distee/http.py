@@ -121,7 +121,7 @@ class HTTPClient:
                            message_reference: Optional[Dict] = None,
                            stickers: Optional[List] = None,
                            components: Optional[List] = None,
-                           flags: Optional[int] = None) -> Message:
+                           flags: Optional[int] = None) -> 'Message':
         if files is not None:
             return await self.send_multipart(route,
                                              files=files,
