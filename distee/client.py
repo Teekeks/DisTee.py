@@ -66,6 +66,7 @@ class Client:
     _event_listener = {}
     _guilds = {}
     _users = {}
+    _member_update_replay = {}
     messages = []
     message_cache_size: int = 10
     _application_commands: Dict[int, ApplicationCommand] = {}
@@ -176,11 +177,9 @@ class Client:
         guild = self.get_guild(int(data['guild_id']))
         await guild.handle_member_chunk(data)
 
-    async def _on_guild_member_update(self, data: dict):
+    async def _play_guild_member_update(self, data: dict):
         try:
             guild = self.get_guild(int(data.get('guild_id')))
-            if guild is None:
-                raise Exception('guild member update for unknown guild')
             member = guild.get_member(int(data.get('user').get('id')))
             new_member = Member(**data, _client=self, _guild=guild)
             # lets update the member
@@ -192,6 +191,20 @@ class Client:
                 pass
             else:
                 logging.warning(f'skipped member update for {new_member.id} in {guild.id}: old member not cached')
+        except:
+            logging.exception('Exception while handling guild member update')
+
+    async def _on_guild_member_update(self, data: dict):
+        try:
+            guild = self.get_guild(int(data.get('guild_id')))
+            if guild is None:
+                # store for later replay
+                gid = int(data.get('guild_id'))
+                if self._member_update_replay.get(gid) is None:
+                    self._member_update_replay[gid] = []
+                self._member_update_replay[gid].append(data)
+                return
+            await self._play_guild_member_update(data)
         except:
             logging.exception('Exception while handling guild member update')
         pass
@@ -271,6 +284,10 @@ class Client:
             for event in self._event_listener.get(Event.GUILD_JOINED.value, []):
                 await event(g)
         self._guilds[g.id] = g
+        if self._member_update_replay.get(g.id) is not None:
+            dat = self._member_update_replay.pop(g.id)
+            for d in dat:
+                asyncio.ensure_future(self._play_guild_member_update(d))
         if self.build_member_cache:
             await self.ws.request_guild_members(g.id)
         # register server specific commands on join
