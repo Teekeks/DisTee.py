@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import logging
 import typing
 
@@ -17,8 +18,17 @@ if typing.TYPE_CHECKING:
     from .client import Client
 
 
-
 class Member(User):
+
+    __slots__ = [
+        'guild',
+        'nick',
+        'roles',
+        'joined_at',
+        'deaf',
+        'mute',
+        'pending'
+    ]
 
     def __init__(self, **data):
         super(Member, self).__init__(**data.get('user'), _client=data.get('_client'))
@@ -62,6 +72,15 @@ class Member(User):
                                         json={'delete_message_days': delete_message_days},
                                         reason=reason)
 
+    async def timeout(self, seconds: int):
+        time = datetime.datetime.utcnow() + datetime.timedelta(seconds=seconds)
+        js = {'communication_disabled_until': time.isoformat()}
+        await self._client.http.request(Route('PATCH',
+                                              '/guilds/{guild_id}/members/{member_id}',
+                                              guild_id=self.guild,
+                                              member_id=self),
+                                        json=js)
+
     def get_highest_role(self) -> Role:
         highest: Role = None
         for r in self.roles.values():
@@ -72,36 +91,37 @@ class Member(User):
 
 class VoiceState:
 
-    guild: 'Guild' = None
-    _client: 'Client' = None
-    channel_id: Snowflake = None
-    user_id: Snowflake = None
-    session_id: str = None
-    deaf: bool = None
-    mute: bool = None
-    self_deaf: bool = None
-    self_mute: bool = None
-    self_stream: bool = None
-    self_video: bool = None
-    suppress: bool = None
-    request_to_speak_timestamp: str = None
+    __slots__ = [
+        'guild',
+        '_client',
+        'channel_id',
+        'user_id',
+        'session_id',
+        'deaf',
+        'mute',
+        'self_deaf',
+        'self_mute',
+        'self_stream',
+        'self_video',
+        'request_to_speak_timestamp'
+    ]
 
     def __init__(self, **data):
-        self.guild = data.get('_guild')
+        self.guild: 'Guild' = data.get('_guild')
         self._client: 'Client' = data.get('_client')
         self.from_data(**data)
 
     def from_data(self, **data):
-        self.channel_id = Snowflake(id=data.get('channel_id'))
-        self.user_id = Snowflake(id=data.get('user_id'))
-        self.session_id = data.get('session_id')
-        self.deaf = data.get('deaf')
-        self.mute = data.get('mute')
-        self.self_deaf = data.get('self_deaf')
-        self.self_mute = data.get('self_mute')
-        self.self_stream = data.get('self_stream', False)
-        self.self_video = data.get('self_video')
-        self.request_to_speak_timestamp = data.get('request_to_speak_timestamp')
+        self.channel_id: Snowflake = Snowflake(id=data.get('channel_id'))
+        self.user_id: Snowflake = Snowflake(id=data.get('user_id'))
+        self.session_id: str = data.get('session_id')
+        self.deaf: bool = data.get('deaf')
+        self.mute: bool = data.get('mute')
+        self.self_deaf: bool = data.get('self_deaf')
+        self.self_mute: bool = data.get('self_mute')
+        self.self_stream: bool = data.get('self_stream', False)
+        self.self_video: bool = data.get('self_video')
+        self.request_to_speak_timestamp: str = data.get('request_to_speak_timestamp')
 
 
 class Guild(Snowflake):
