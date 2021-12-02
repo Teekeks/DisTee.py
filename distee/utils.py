@@ -19,6 +19,11 @@ def get_json_from_dict(data) -> str:
 
 class Snowflake:
 
+    __slots__ = [
+        'id',
+        '_client'
+    ]
+
     def __init__(self, **args):
         self.id: int = int(args.get('id')) if args.get('id') is not None else None
         self._client: Client = args.get('_client')
