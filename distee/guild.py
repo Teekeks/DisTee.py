@@ -27,7 +27,8 @@ class Member(User):
         'joined_at',
         'deaf',
         'mute',
-        'pending'
+        'pending',
+        'communication_disabled_until'
     ]
 
     def __init__(self, **data):
@@ -40,6 +41,7 @@ class Member(User):
         self.deaf: bool = data.get('deaf')
         self.mute: bool = data.get('mute')
         self.pending: Optional[bool] = data.get('pending')
+        self.communication_disabled_until: Optional[str] = data.get('communication_disabled_until')
 
     async def add_role(self, role: Union[Role, int], reason: Optional[str] = None):
         await self._client.http.request(Route('PUT',
@@ -72,17 +74,30 @@ class Member(User):
                                         json={'delete_message_days': delete_message_days},
                                         reason=reason)
 
-    async def timeout(self, seconds: int):
+    @property
+    def in_timeout(self) -> bool:
+        return self.communication_disabled_until is not None
+
+    async def timeout(self, seconds: int, reason: Optional[str] = None):
         time = datetime.datetime.utcnow() + datetime.timedelta(seconds=seconds)
         js = {'communication_disabled_until': time.isoformat()}
         await self._client.http.request(Route('PATCH',
                                               '/guilds/{guild_id}/members/{member_id}',
                                               guild_id=self.guild,
                                               member_id=self),
-                                        json=js)
+                                        json=js,
+                                        reason=reason)
+
+    async def reset_timeout(self, reason: Optional[str] = None):
+        await self._client.http.request(Route('PATCH',
+                                              '/guilds/{guild_id}/members/{member_id}',
+                                              guild_id=self.guild,
+                                              member_id=self),
+                                        json={'communication_disabled_until': None},
+                                        reason=reason)
 
     def get_highest_role(self) -> Role:
-        highest: Role = None
+        highest = None
         for r in self.roles.values():
             if highest is None or highest.position < r.position:
                 highest = r
