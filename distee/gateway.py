@@ -122,7 +122,8 @@ class DiscordWebSocket:
         data = msg.get('d')
         event = msg.get('t')
         if seq is not None:
-            self.sequence = seq
+            if self.sequence is None or seq > self.sequence:
+                self.sequence = seq
 
         if self.heartbeat_manager:
             self.heartbeat_manager.tick()
