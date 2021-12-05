@@ -72,4 +72,4 @@ class Messageable:
                                                   channel_id=channel.id,
                                                   message_id=msg_id),
                                             form=form)
-        return Message(**d, _client=channel._client)
+        return Message(**d, _client=self._client)
