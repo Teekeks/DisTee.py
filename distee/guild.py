@@ -35,7 +35,7 @@ class Member(User):
         super(Member, self).__init__(**data.get('user'), _client=data.get('_client'))
         self.guild: Guild = data.get('_guild')
         self.nick: Optional[str] = data.get('nick')
-        self.roles: Dict[int, Role] = {int(x): self.guild.get_role(int(x)) for x in data.get('roles')}
+        self.roles: Dict[int, Role] = {int(x): self.guild.get_role(int(x)) for x in data.get('roles')} if self.guild is not None else {}
         self.joined_at = data.get('joined_at')  # FIXME port to datetime
         self.premium_since: Optional[str] = data.get('premium_since')
         self.deaf: bool = data.get('deaf')

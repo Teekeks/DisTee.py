@@ -131,6 +131,8 @@ class Client:
 
     async def _on_guild_role_update(self, data: dict):
         guild = self.get_guild(int(data['guild_id']))
+        if guild is None:
+            return
         role = guild.get_role(int(data['role']['id']))
         # old_role = deepcopy(role)
         role.copy(**data['role'])
