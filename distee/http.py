@@ -112,8 +112,8 @@ class HTTPClient:
         if allowed_mentions is not None:
             payload['allowed_mentions'] = allowed_mentions
         form.append({'name': 'payload_json', 'value': json.dumps(payload)})
-        data = await self.http.request(route, form=form)
-        return Message(**data, _client=self._client)
+        data = await self.request(route, form=form)
+        return Message(**data, _client=self.client)
     pass
 
     async def send_message(self,
