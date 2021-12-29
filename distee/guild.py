@@ -1,5 +1,4 @@
-import asyncio
-import datetime
+from datetime import datetime, timedelta
 import logging
 import typing
 
@@ -41,7 +40,8 @@ class Member(User):
         self.deaf: bool = data.get('deaf')
         self.mute: bool = data.get('mute')
         self.pending: Optional[bool] = data.get('pending')
-        self.communication_disabled_until: Optional[str] = data.get('communication_disabled_until')
+        self.communication_disabled_until: Optional[datetime] = datetime.fromisoformat(data.get('communication_disabled_until')) \
+            if data.get('communication_disabled_until') is not None else None
 
     async def add_role(self, role: Union[Role, int], reason: Optional[str] = None):
         await self._client.http.request(Route('PUT',
@@ -76,10 +76,10 @@ class Member(User):
 
     @property
     def in_timeout(self) -> bool:
-        return self.communication_disabled_until is not None
+        return self.communication_disabled_until is not None and self.communication_disabled_until > datetime.utcnow()
 
     async def timeout(self, seconds: int, reason: Optional[str] = None):
-        time = datetime.datetime.utcnow() + datetime.timedelta(seconds=seconds)
+        time = datetime.utcnow() + timedelta(seconds=seconds)
         js = {'communication_disabled_until': time.isoformat()}
         await self._client.http.request(Route('PATCH',
                                               '/guilds/{guild_id}/members/{member_id}',
@@ -211,6 +211,17 @@ class Guild(Snowflake):
             self._members[m.id] = m
             if self._client is not None:
                 self._client.add_user_to_cache(m_d.get('user'))
+
+    async def handle_channel_create(self, data: dict):
+        channel = get_channel(**data, _client=self._client, _guild=self)
+        self._channels[channel.id] = channel
+
+    async def handle_channel_update(self, data: dict):
+        channel = get_channel(**data, _client=self._client, _guild=self)
+        self._channels[channel.id] = channel
+
+    async def handle_channel_delete(self, data: dict):
+        self._channels.pop(int(data['id']))
 
     async def handle_member_chunk(self, data: dict):
         for m_data in data['members']:

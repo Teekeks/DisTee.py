@@ -97,6 +97,9 @@ class Client:
         self.register_raw_gateway_event_listener('VOICE_STATE_UPDATE', self._on_voice_state_update)
         self.register_raw_gateway_event_listener('MESSAGE_CREATE', self._on_message)
         self.register_raw_gateway_event_listener('INTERACTION_CREATE', self._on_interaction_create)
+        self.register_raw_gateway_event_listener('CHANNEL_CREATE', self._on_guild_channel_create)
+        self.register_raw_gateway_event_listener('CHANNEL_UPDATE', self._on_guild_channel_update)
+        self.register_raw_gateway_event_listener('CHANNEL_DELETE', self._on_guild_channel_delete)
 
     def is_closed(self) -> bool:
         """Returns whether or not this client is closing down"""
@@ -138,6 +141,33 @@ class Client:
         role.copy(**data['role'])
         # for event in self._event_listener.get(Event.GUILD_ROLE_UPDATED.value, []):
         #    asyncio.ensure_future(event(old_role, role))
+
+    async def _on_guild_channel_create(self, data: dict):
+        guild = self.get_guild(int(data['guild_id']))
+        if guild is None:
+            logging.warning(f'skipped channel create event: guild {int(data["guild_id"])} not present')
+            return
+        await guild.handle_channel_create(data)
+
+    async def _on_guild_channel_update(self, data: dict):
+        # not a guild channel delete?
+        if data.get('guild_id') is None:
+            return
+        guild = self.get_guild(int(data['guild_id']))
+        if guild is None:
+            logging.warning(f'skipped channel update event: guild {int(data["guild_id"])} not present')
+            return
+        await guild.handle_channel_update(data)
+
+    async def _on_guild_channel_delete(self, data: dict):
+        # not a guild channel delete?
+        if data.get('guild_id') is None:
+            return
+        guild = self.get_guild(int(data['guild_id']))
+        if guild is None:
+            logging.warning(f'skipped channel delete event: guild {int(data["guild_id"])} not present')
+            return
+        await guild.handle_channel_delete(data)
 
     async def _on_guild_role_delete(self, data: dict):
         guild = self.get_guild(int(data['guild_id']))
