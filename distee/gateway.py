@@ -7,11 +7,8 @@ import zlib
 from . import utils
 
 import aiohttp
-from aiohttp import ClientSession
 from aiohttp import ClientWebSocketResponse
-from pprint import pprint
 from concurrent import futures
-import sys
 from .errors import WebSocketClosure, ReconnectWebSocket, ConnectionClosed
 
 
@@ -64,7 +61,6 @@ class HeartbeatThread(threading.Thread):
         pass
 
     def stop(self):
-        print('stopping heartbeat')
         self.stop_event.set()
 
 
@@ -170,7 +166,6 @@ class DiscordWebSocket:
         logging.warning(f'unknown OP code {op}')
 
     async def close(self, code=4000):
-        print('closing websocket')
         if self.heartbeat_manager:
             self.heartbeat_manager.stop()
             self.heartbeat_manager = None
