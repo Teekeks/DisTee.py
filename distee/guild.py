@@ -59,6 +59,37 @@ class Member(User):
                                               role_id=role),
                                         reason=reason)
 
+    async def add_roles(self, roles: List[Union[Role, int]], reason: Optional[str] = None):
+        """Add multiple roles in one API call, fall back to safer method if only one is added"""
+        if len(roles) == 1:
+            await self.add_role(roles[0], reason)
+            return
+        if len(roles) == 0:
+            raise ValueError('at least 1 role needs to be specified')
+        target = list(set(list(self.roles.keys()) + [r if isinstance(r, int) else r.id for r in roles]))
+        await self._client.http.request(Route('PATCH',
+                                              '/guilds/{guild_id}/members/{user_id}',
+                                              guild_id=self.guild,
+                                              user_id=self.id),
+                                        json={'roles': target},
+                                        reason=reason)
+
+    async def remove_roles(self, roles: List[Union[Role, int]], reason: Optional[str] = None):
+        """Remove multiple roles in one API call, fall back to safer method if only one is removed"""
+        if len(roles) == 1:
+            await self.remove_role(roles[0], reason)
+            return
+        if len(roles) == 0:
+            raise ValueError('at least 1 role needs to be specified')
+        rem = [r if isinstance(r, int) else r.id for r in roles]
+        target = [r for r in self.roles.keys() if r not in rem]
+        await self._client.http.request(Route('PATCH',
+                                              '/guilds/{guild_id}/members/{user_id}',
+                                              guild_id=self.guild,
+                                              user_id=self.id),
+                                        json={'roles': target},
+                                        reason=reason)
+
     async def kick(self, reason: Optional[str] = None):
         await self._client.http.request(Route('DELETE',
                                               '/guilds/{guild_id}/members/{user_id}',
