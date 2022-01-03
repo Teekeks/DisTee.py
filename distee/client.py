@@ -66,12 +66,14 @@ class Client:
     _event_listener = {}
     _guilds = {}
     _users = {}
+    _default_command_preprocessors = []
     _member_update_replay = {}
     messages = []
     message_cache_size: int = 10
     _application_commands: Dict[int, ApplicationCommand] = {}
     _interaction_handler: Dict[str, Callable] = {}
     _command_registrar: List[Dict] = []
+
     gateway_listener = None
     interaction_listener = None
     command_listener = None
@@ -253,6 +255,9 @@ class Client:
             interaction = Interaction(**data, _client=self)
             _id = interaction.data.id
             if interaction.type == InteractionType.APPLICATION_COMMAND:
+                for dcpp in self._default_command_preprocessors:
+                    if not await dcpp(interaction):
+                        return
                 ac = self._application_commands.get(_id)
                 if self.command_listener is not None:
                     asyncio.ensure_future(self.command_listener(ac, interaction))
@@ -572,3 +577,7 @@ class Client:
                 'guild_filter': guild_filter,
                 'callback': callback
             })
+
+    def add_default_command_preprocessor(self, com):
+        self._default_command_preprocessors.append(com)
+
