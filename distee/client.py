@@ -255,15 +255,16 @@ class Client:
             interaction = Interaction(**data, _client=self)
             _id = interaction.data.id
             if interaction.type == InteractionType.APPLICATION_COMMAND:
-                for dcpp in self._default_command_preprocessors:
-                    if not await dcpp(interaction):
-                        return
                 ac = self._application_commands.get(_id)
-                if self.command_listener is not None:
-                    asyncio.ensure_future(self.command_listener(ac, interaction))
                 if ac is None:
                     logging.error(f'could not find callback for command {interaction.data.name} ({_id})')
                     return
+                for dcpp in self._default_command_preprocessors:
+                    if not await dcpp(interaction):
+                        return
+                # FIXME use command specific preprocessor
+                if self.command_listener is not None:
+                    asyncio.ensure_future(self.command_listener(ac, interaction))
                 await ac.callback(interaction)
             elif interaction.type == InteractionType.MESSAGE_COMPONENT:
                 if self.interaction_listener is not None:
@@ -457,7 +458,6 @@ class Client:
             logging.info('shutting down due to keyboard interrupt.')
         finally:
             future.remove_done_callback(stop_loop_on_completion)
-            print('cleanup loop')
             _cleanup_loop(self.loop)
         if not future.cancelled():
             try:
@@ -561,13 +561,15 @@ class Client:
                          ap: ApplicationCommand,
                          callback,
                          is_global: bool,
-                         guild_filter: Union[int, None, List[int]]):
+                         guild_filter: Union[int, None, List[int]],
+                         preprocessors: Optional[List[Callable[[Interaction], Awaitable[bool]]]] = None):
         if is_global:
             # register global command
             self._command_registrar.append({
                 'ap': ap,
                 'callback': callback,
-                'global': True
+                'global': True,
+                'prep': preprocessors
             })
         else:
             # register internally for server specific
@@ -575,7 +577,8 @@ class Client:
                 'ap': ap,
                 'global': False,
                 'guild_filter': guild_filter,
-                'callback': callback
+                'callback': callback,
+                'prep': preprocessors
             })
 
     def add_default_command_preprocessor(self, com):

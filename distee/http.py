@@ -10,7 +10,6 @@ from aiohttp import ClientSession, ClientResponse
 from . import utils
 from .errors import HTTPException, GatewayNotFound, Forbidden, NotFound, DiscordServerError
 import logging
-from pprint import pprint
 from .message import Message
 from .route import Route
 
