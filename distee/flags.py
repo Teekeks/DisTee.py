@@ -118,6 +118,7 @@ class Permissions(IntFlag):
     USE_EXTERNAL_STICKERS = 1 << 37
     SEND_MESSAGES_IN_THREADS = 1 << 38
     START_EMBEDDED_ACTIVITIES = 1 << 39
+    MODERATE_MEMBERS = 1 << 40
 
     def values(self):
         return [flag for flag in Permissions if flag in self]
