@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import signal
+import typing
 from copy import deepcopy
 from typing import Callable, Awaitable, Optional, Union, List, TypedDict, Dict
 
@@ -15,7 +16,7 @@ from .errors import ClientException, ReconnectWebSocket, ConnectionClosed, Privi
 from .message import Message
 from .utils import Snowflake
 from .flags import Intents
-from .enums import InteractionType, Event, ApplicationCommandType
+from .enums import InteractionType, Event, ApplicationCommandType, PresenceStatus
 from .guild import Guild, Member, VoiceState
 from .application_command import ApplicationCommand
 from .application import Application
@@ -66,6 +67,8 @@ class Client:
     _event_listener = {}
     _guilds = {}
     _users = {}
+    activity = None
+    presence_status: PresenceStatus = PresenceStatus.ONLINE
     _default_command_preprocessors = []
     _member_update_replay = {}
     messages = []
@@ -113,6 +116,10 @@ class Client:
             raise ClientException('Failed to log in')
         self.user = User(**data)
         logging.debug(f'Logged in as user {self.user.username}#{self.user.discriminator}')
+
+    async def update_activity(self, activity: Optional[dict]):
+        self.activity = activity
+        await self.ws.update_presence()
 
 ########################################################################################################################
 # EVENT HOOKS

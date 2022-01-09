@@ -224,12 +224,24 @@ class DiscordWebSocket:
                     '$device': f'DisTee.py v{utils.VERSION}'
                 },
                 'presence': {
-                    'status': 'online'
+                    'status': self.client.presence_status.value
                 }
             }
         }
+        if self.client.activity is not None:
+            d['d']['presence']['activities'] = [self.client.activity]
         await self.send_as_json(d)
-        pass
+
+    async def update_presence(self):
+        d = {
+            'op': self.PRESENCE_UPDATE,
+            'd': {
+                'status': self.client.presence_status.value
+            }
+        }
+        if self.client.activity is not None:
+            d['d']['activities'] = [self.client.activity]
+        await self.send_as_json(d)
 
     async def request_guild_members(self, gid: int):
         d = {

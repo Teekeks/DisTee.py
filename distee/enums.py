@@ -109,3 +109,11 @@ class Event(Enum):
     GUILD_ROLE_UPDATED = 'guild_role_updated'
 
     MESSAGE_SEND = 'message_send'
+
+
+class PresenceStatus(Enum):
+    ONLINE = 'online'
+    DND = 'dnd'
+    IDLE = 'idle'
+    INVISIBLE = 'invisible'
+    OFFLINE = 'offline'
