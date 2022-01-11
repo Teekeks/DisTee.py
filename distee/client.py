@@ -65,8 +65,8 @@ class Client:
     _closed = False
     _raw_gateway_listener = {}
     _event_listener = {}
-    _guilds = {}
-    _users = {}
+    _guilds: Dict[int, Guild] = {}
+    _users: Dict[int, User] = {}
     activity = None
     presence_status: PresenceStatus = PresenceStatus.ONLINE
     _default_command_preprocessors = []
