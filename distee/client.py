@@ -81,6 +81,14 @@ class Client:
     interaction_listener = None
     command_listener = None
 
+    @property
+    def guilds(self):
+        return self._guilds
+
+    @property
+    def users(self):
+        return self._users
+
     def __init__(self):
         self.ws = None
         self.build_member_cache: bool = True
