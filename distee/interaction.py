@@ -62,6 +62,8 @@ class Interaction(Snowflake):
             if data.get('data') is not None else None
         self.message: Optional[Message] = Message(**data.get('message'), _client=self._client) \
             if data.get('message') is not None else None
+        self.locale: Optional[str] = data.get('locale')
+        self.guild_locale: Optional[str] = data.get('guild_locale')
 
     async def defer_message_edit(self):
         """ACK component interaction now and edit message later"""
