@@ -215,9 +215,8 @@ class Client:
             self._users[usr.id] = usr
         msg = Message(**data, _client=self)
         # add to cache
-        self.messages.append(msg)
-        if len(self.messages) > self.message_cache_size:
-            self.messages.pop(0)
+        if len(self.messages) < self.message_cache_size:
+            self.messages.append(msg)
         # call on_message event
         events = self._event_listener.get(Event.MESSAGE_SEND.value, [])
         for event in events:
