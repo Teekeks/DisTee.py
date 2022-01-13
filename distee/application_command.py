@@ -98,6 +98,8 @@ class ApplicationCommand(Snowflake):
         self.name: str = data.get('name')
         self.description: str = data.get('description')
         self.default_permission: bool = data.get('default_permission', True)
+        self.dm_permission: bool = data.get('dm_permission', True)
+        self.default_member_permissions: str = data.get('default_member_permissions', '')
         self.version: Snowflake = Snowflake(id=data.get('version'))
         if data.get('options') is None or len(data.get('options')) == 0:
             self.options: List[ApplicationCommandOption] = []
@@ -113,6 +115,8 @@ class ApplicationCommand(Snowflake):
             'description': self.description,
             'type': self.type.value,
             'default_permission': self.default_permission,
+            'dm_permission': self.dm_permission,
+            'default_member_permissions': self.default_member_permissions,
             'options': [d.get_json_data() for d in self.options]
         }
 

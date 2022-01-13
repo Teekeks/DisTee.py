@@ -101,9 +101,9 @@ class Interaction(Snowflake):
                                         json=json)
 
     async def send(self,
-                   tts: Optional[bool] = None,
                    content: Optional[str] = None,
                    embeds: Optional[List[dict]] = None,
+                   tts: Optional[bool] = None,
                    allowed_mentions: Optional[dict] = None,
                    components: Optional[List[dict]] = None,
                    stickers: Optional[List] = None,
