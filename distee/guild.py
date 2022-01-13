@@ -27,7 +27,8 @@ class Member(User):
         'deaf',
         'mute',
         'pending',
-        'communication_disabled_until'
+        'communication_disabled_until',
+        'premium_since'
     ]
 
     def __init__(self, **data):
