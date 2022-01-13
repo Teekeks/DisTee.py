@@ -73,6 +73,7 @@ class Client:
     _member_update_replay = {}
     messages = []
     message_cache_size: int = 10
+    build_user_cache: bool = True
     _application_commands: Dict[int, ApplicationCommand] = {}
     _interaction_handler: Dict[str, Callable] = {}
     _command_registrar: List[Dict] = []
@@ -326,7 +327,8 @@ class Client:
         guild = self.get_guild(gid)
         member = Member(**data, _client=self, _guild=guild)
         guild._members[member.id] = member
-        self.add_user_to_cache(data.get('user'))
+        if self.build_user_cache:
+            self.add_user_to_cache(data.get('user'))
         for event in self._event_listener.get(Event.MEMBER_JOINED.value, []):
             await event(member)
 
@@ -514,7 +516,8 @@ class Client:
     async def fetch_user(self, uid: Union[Snowflake, int]) -> User:
         data = await self.http.request(Route('GET', '/users/{user_id}', user_id=uid))
         user = User(**data, _client=self)
-        self.add_user_to_cache(user)
+        if self.build_user_cache:
+            self.add_user_to_cache(user)
         return user
 
     def get_guild(self, s: Union[Snowflake, int]) -> Optional[Guild]:
