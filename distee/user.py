@@ -16,7 +16,7 @@ class User(Snowflake, abc.Messageable):
         'public_flags',
         'dm_channel',
         'accent_color',
-        'banner',
+        'banner_hash',
         'bot',
         'system'
     ]
@@ -33,13 +33,17 @@ class User(Snowflake, abc.Messageable):
         self.flags: UserFlags = UserFlags(args.get('flags') if args.get('flags') is not None else 0)
         self.public_flags: UserFlags = UserFlags(args.get('public_flags') if args.get('public_flags') is not None else 0)
         self.accent_color: Optional[int] = args.get('accent_color')
-        self.banner: str = args.get('banner')
+        self.banner_hash: str = args.get('banner')
         self.bot: bool = args.get('bot', False)
         self.system: bool = args.get('system', False)
 
     @property
     def avatar(self) -> str:
         return f'https://cdn.discordapp.com/avatars/{self.id}/{self.avatar_hash}.png'
+
+    @property
+    def banner(self) -> str:
+        return f'https://cdn.discordapp.com/banners/{self.id}/{self.banner_hash}.png'
 
     async def fetch_dm_channel(self):
         if self.dm_channel is not None:
