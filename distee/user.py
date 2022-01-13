@@ -32,7 +32,7 @@ class User(Snowflake, abc.Messageable):
         self.avatar_hash: str = args.get("avatar")
         self.flags: UserFlags = UserFlags(args.get('flags') if args.get('flags') is not None else 0)
         self.public_flags: UserFlags = UserFlags(args.get('public_flags') if args.get('public_flags') is not None else 0)
-        self.accent_color: str = args.get('accent_color')
+        self.accent_color: Optional[int] = args.get('accent_color')
         self.banner: str = args.get('banner')
         self.bot: bool = args.get('bot', False)
         self.system: bool = args.get('system', False)
