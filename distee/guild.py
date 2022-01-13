@@ -242,7 +242,8 @@ class Guild(Snowflake):
             m = Member(**m_d, _client=self._client, _guild=self)
             self._members[m.id] = m
             if self._client is not None:
-                self._client.add_user_to_cache(m_d.get('user'))
+                if self._client.build_user_cache:
+                    self._client.add_user_to_cache(m_d.get('user'))
 
     async def handle_channel_create(self, data: dict):
         channel = get_channel(**data, _client=self._client, _guild=self)
