@@ -245,6 +245,10 @@ class Guild(Snowflake):
                 if self._client.build_user_cache:
                     self._client.add_user_to_cache(m_d.get('user'))
 
+    @property
+    def members(self) -> Dict[int, Member]:
+        return self._members
+
     async def handle_channel_create(self, data: dict):
         channel = get_channel(**data, _client=self._client, _guild=self)
         self._channels[channel.id] = channel
