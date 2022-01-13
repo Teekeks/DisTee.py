@@ -51,6 +51,8 @@ class ChannelType(IntEnum):
     GUILD_PUBLIC_THREAD = 11
     GUILD_PRIVATE_THREAD = 12
     GUILD_STAGE_VOICE = 13
+    GUILD_DIRECTORY = 14
+    FORUM_CHANNEL = 15
 
 
 class ApplicationCommandType(IntEnum):

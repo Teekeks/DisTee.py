@@ -101,6 +101,11 @@ def get_channel(**data):
         return VoiceChannel(**data)
     if t == ChannelType.GUILD_STORE:
         return GuildChannel(**data)
+    # FIXME: make this proper
+    if t == ChannelType.FORUM_CHANNEL:
+        return GuildChannel(**data)
+    if t == ChannelType.GUILD_DIRECTORY:
+        return GuildChannel(**data)
     if t == ChannelType.DM:
         return DMChannel(**data)
 
