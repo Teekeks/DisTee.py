@@ -98,8 +98,8 @@ class ApplicationCommand(Snowflake):
         self.name: str = data.get('name')
         self.description: str = data.get('description')
         self.default_permission: bool = data.get('default_permission', True)
-        self.dm_permission: bool = data.get('dm_permission', True)
-        self.default_member_permissions: str = data.get('default_member_permissions', '')
+        self.dm_permission: bool = data.get('dm_permission', None)
+        self.default_member_permissions: str = data.get('default_member_permissions', None)
         self.version: Snowflake = Snowflake(id=data.get('version'))
         if data.get('options') is None or len(data.get('options')) == 0:
             self.options: List[ApplicationCommandOption] = []
@@ -110,15 +110,18 @@ class ApplicationCommand(Snowflake):
         self.callback = data.get('_callback')
 
     def get_json_data(self):
-        return {
+        ret = {
             'name': self.name,
             'description': self.description,
             'type': self.type.value,
             'default_permission': self.default_permission,
-            'dm_permission': self.dm_permission,
-            'default_member_permissions': self.default_member_permissions,
             'options': [d.get_json_data() for d in self.options]
         }
+        if self.dm_permission is not None:
+            ret['dm_permission'] = self.dm_permission
+        if self.default_member_permissions is not None:
+            ret['default_member_permissions'] = self.default_member_permissions
+        return ret
 
     def is_global(self):
         return self.guild_id is None
