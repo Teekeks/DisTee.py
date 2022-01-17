@@ -1,4 +1,5 @@
 import json
+import logging
 import typing
 
 from . import abc
@@ -118,7 +119,11 @@ class DMChannel(MessageableChannel):
 
 def get_channel(**data):
     """Returns the correct channel class based on the ChannelType"""
-    t = ChannelType(data.get('type'))
+    try:
+        t = ChannelType(data.get('type'))
+    except ValueError:
+        logging.warning(f'encountered unknown guild channel type {data.get("type")}, fallback to default')
+        return BaseChannel(**data)
     if t == ChannelType.GUILD_TEXT:
         return TextChannel(**data)
     if t == ChannelType.GUILD_CATEGORY:
