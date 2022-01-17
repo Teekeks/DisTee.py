@@ -12,7 +12,20 @@ class RoleTag:
 
 
 class Role(Snowflake):
-    
+
+    __slots__ = [
+        'guild',
+        'name',
+        'color',
+        'hoist',
+        'position',
+        'raw_permissions',
+        'permissions',
+        'managed',
+        'mentionable',
+        'tags'
+    ]
+
     def __init__(self, **data):
         super(Role, self).__init__(**data)
         self.copy(**data)
