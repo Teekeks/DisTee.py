@@ -13,12 +13,25 @@ if typing.TYPE_CHECKING:
 
 class BaseChannel(Snowflake):
 
+    __slots__ = [
+        'type'
+    ]
+
     def __init__(self, **data):
         super(BaseChannel, self).__init__(**data)
         self.type: ChannelType = ChannelType(data.get('type'))
 
 
 class GuildChannel(BaseChannel):
+
+    __slots__ = [
+        'guild_id',
+        'name',
+        'position',
+        'nsfw',
+        'permission_overwrites',
+        'parent_id'
+    ]
     
     def __init__(self, **data):
         super(GuildChannel, self).__init__(**data)
@@ -56,6 +69,13 @@ class MessageableChannel(BaseChannel, abc.Messageable):
 class TextChannel(GuildChannel, MessageableChannel):
     """A Guild text channel"""
 
+    __slots__ = [
+        'rate_limit_per_user',
+        'topic',
+        'last_message_id',
+        'default_auto_archive_duration'
+    ]
+
     def __init__(self, **data):
         super(TextChannel, self).__init__(**data)
         self.rate_limit_per_user: int = data.get('rate_limit_per_user')
@@ -75,6 +95,12 @@ class TextChannel(GuildChannel, MessageableChannel):
 
 
 class VoiceChannel(GuildChannel):
+
+    __slots__ = [
+        'bitrate',
+        'user_limit',
+        'rtc_region'
+    ]
 
     def __init__(self, **data):
         super(VoiceChannel, self).__init__(**data)
