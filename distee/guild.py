@@ -44,6 +44,11 @@ class Member(User):
         self.communication_disabled_until: Optional[datetime] = datetime.fromisoformat(data.get('communication_disabled_until')) \
             if data.get('communication_disabled_until') is not None else None
 
+    @property
+    def display_name(self):
+        """The name the user has on the server, uses nick if set otherwise username"""
+        return self.nick if self.nick is not None else self.username
+
     async def add_role(self, role: Union[Role, int], reason: Optional[str] = None):
         await self._client.http.request(Route('PUT',
                                               '/guilds/{guild_id}/members/{user_id}/roles/{role_id}',
