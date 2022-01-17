@@ -13,6 +13,20 @@ if typing.TYPE_CHECKING:
 
 class Message(Snowflake):
 
+    __slots__ = [
+        'content',
+        'guild_id',
+        'channel_id',
+        'author_id',
+        'pinned',
+        'flags',
+        'guild',
+        'channel',
+        'author',
+        'embeds',
+        'components'
+    ]
+
     def __init__(self, **args):
         super(Message, self).__init__(**args)
         self.content: str = args.get('content')
