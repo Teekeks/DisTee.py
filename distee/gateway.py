@@ -197,7 +197,7 @@ class DiscordWebSocket:
                 self.heartbeat_manager.stop()
                 self.heartbeat_manager = None
             if isinstance(e, asyncio.TimeoutError):
-                logging.info('Timed our receiving packet. Attempting to reconnect.')
+                logging.info('Timed out receiving packet. Attempting to reconnect.')
                 raise ReconnectWebSocket() from None
             code = self._close_code or self.socket.close_code
             if self._can_handle_close():
