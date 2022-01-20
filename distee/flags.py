@@ -31,6 +31,15 @@ class Intents:
     value: int = 0
 
     @classmethod
+    def set(cls, intents: List[str]) -> 'Intents':
+        val = 0
+        i = cls()
+        for x in intents:
+            val |= i._values[x]
+        i.value = val
+        return i
+
+    @classmethod
     def all(cls) -> 'Intents':
         val = 0
         intents = cls()
