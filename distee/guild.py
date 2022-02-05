@@ -349,3 +349,6 @@ class Guild(Snowflake):
 
     async def fetch_invites(self):
         return await self._client.http.request(Route('GET', '/guilds/{guild_id}/invites', guild_id=self.id))
+
+    async def leave_guild(self):
+        await self._client.http.request(Route('DELETE', '/users/@me/guilds/{guild_id}', guild_id=self.id))
