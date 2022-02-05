@@ -130,5 +130,9 @@ class Permissions(IntFlag):
     START_EMBEDDED_ACTIVITIES = 1 << 39
     MODERATE_MEMBERS = 1 << 40
 
+    @classmethod
+    def all(cls):
+        return Permissions(sum([flag for flag in Permissions]))
+
     def values(self):
         return [flag for flag in Permissions if flag in self]

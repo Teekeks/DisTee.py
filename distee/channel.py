@@ -6,11 +6,12 @@ from . import abc
 from .flags import Permissions
 from .utils import Snowflake
 from .enums import ChannelType
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Dict
 from .route import Route
 
 if typing.TYPE_CHECKING:
     from distee.message import Message
+    from distee.guild import Member
 
 
 class BaseChannel(Snowflake):
@@ -52,10 +53,44 @@ class GuildChannel(BaseChannel):
         self.name: str = data.get('name')
         self.position: int = data.get('position')
         self.nsfw: bool = data.get('nsfw')
-        self.permission_overwrites: List[PermissionOverride] = [PermissionOverride(**d) for d in data['permission_overwrites']] \
-            if data.get('permission_overwrites') is not None else []
+        self.permission_overwrites: Dict[int, PermissionOverride] = {int(d['id']): PermissionOverride(**d) for d in data['permission_overwrites']} \
+            if data.get('permission_overwrites') is not None else {}
         self.parent_id: Optional[Snowflake] = Snowflake(id=data.get('parent_id')) \
             if data.get('parent_id') is not None else None
+
+    def get_calculated_permissions(self, member: 'Member') -> Permissions:
+        guild = self._client.get_guild(self.guild_id)
+        # calculate global perms
+        if guild.owner_id.id == member.id:
+            return Permissions.all()
+        everyone_role = guild.get_role(guild.id)
+        perms: Permissions = Permissions(everyone_role.permissions.value)
+        member_roles = sorted(list(member.roles.values()), key=lambda d: d.position)
+        for role in member_roles:
+            perms |= role.permissions
+        if Permissions.ADMINISTRATOR in perms:
+            return Permissions.all()
+        # calculate channel perms
+        overwrite_everyone = self.permission_overwrites.get(guild.id)
+        if overwrite_everyone is not None:
+            perms &= ~overwrite_everyone.deny
+            perms |= overwrite_everyone.allow
+        # role specific overwrites
+        allow = Permissions(0)
+        deny = Permissions(0)
+        for role in member_roles:
+            overwrite_role = self.permission_overwrites.get(role.id)
+            if overwrite_role is not None:
+                allow |= overwrite_role.allow
+                deny |= overwrite_role.deny
+        perms &= ~deny
+        perms |= allow
+        # member specific overwrite
+        overwrite_member = self.permission_overwrites.get(member.id)
+        if overwrite_member is not None:
+            perms &= ~overwrite_member.deny
+            perms |= overwrite_member.allow
+        return perms
 
 
 class Category(GuildChannel):

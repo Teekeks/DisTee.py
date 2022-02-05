@@ -1,6 +1,11 @@
+import typing
+
 from .flags import Permissions
 from .utils import Snowflake
 from typing import Optional
+
+if typing.TYPE_CHECKING:
+    from distee.guild import Guild
 
 
 class RoleTag:
@@ -31,7 +36,7 @@ class Role(Snowflake):
         self.copy(**data)
 
     def copy(self, **data):
-        self.guild = data.get('_guild')
+        self.guild: 'Guild' = data.get('_guild')
         self.name: str = data.get('name')
         self.color: int = data.get('color')
         self.hoist: bool = data.get('hoist')
