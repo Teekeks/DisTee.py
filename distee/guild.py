@@ -352,3 +352,6 @@ class Guild(Snowflake):
 
     async def leave_guild(self):
         await self._client.http.request(Route('DELETE', '/users/@me/guilds/{guild_id}', guild_id=self.id))
+
+    def get_self(self) -> Member:
+        return self._members[self._client.user.id]
