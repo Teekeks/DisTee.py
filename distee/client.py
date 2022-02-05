@@ -422,7 +422,7 @@ class Client:
                         raise PriviledgedIntentsRequired() from None
                     if ex.code != 1000:
                         await self.close()
-                        raise
+                        raise ex
             except asyncio.exceptions.CancelledError:
                 await self.close()
             except:
