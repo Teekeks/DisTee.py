@@ -3,6 +3,7 @@ import logging
 import typing
 
 from . import abc
+from .flags import Permissions
 from .utils import Snowflake
 from .enums import ChannelType
 from typing import Optional, List, Union
@@ -23,6 +24,16 @@ class BaseChannel(Snowflake):
         self.type: ChannelType = ChannelType(data.get('type'))
 
 
+class PermissionOverride(Snowflake):
+    __slots__ = ['type', 'allow', 'deny']
+
+    def __init__(self, **data):
+        super(PermissionOverride, self).__init__(**data)
+        self.type: int = data['type']
+        self.allow: Permissions = Permissions(int(data['allow']))
+        self.deny: Permissions = Permissions(int(data['deny']))
+
+
 class GuildChannel(BaseChannel):
 
     __slots__ = [
@@ -41,7 +52,8 @@ class GuildChannel(BaseChannel):
         self.name: str = data.get('name')
         self.position: int = data.get('position')
         self.nsfw: bool = data.get('nsfw')
-        self.permission_overwrites: []  # FIXME parse permission overwrites
+        self.permission_overwrites: List[PermissionOverride] = [PermissionOverride(**d) for d in data['permission_overwrites']] \
+            if data.get('permission_overwrites') is not None else []
         self.parent_id: Optional[Snowflake] = Snowflake(id=data.get('parent_id')) \
             if data.get('parent_id') is not None else None
 
