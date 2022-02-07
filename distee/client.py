@@ -343,7 +343,11 @@ class Client:
             for d in dat:
                 asyncio.ensure_future(self._play_guild_member_update(d))
         if self.build_member_cache:
-            await self.ws.request_guild_members(g.id)
+            if len(g.members.keys()) < g.member_count:
+                logging.info(f'A: {len(g.members.keys())}, B: {g.member_count}')
+                await self.ws.request_guild_members(g.id)
+            else:
+                logging.info(f'member cache for {g.id} was already filled, got {len(g.members.keys())}')
         # register server specific commands on join
         await self._register_guild_commands(g.id)
 
