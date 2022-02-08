@@ -9,6 +9,13 @@ if typing.TYPE_CHECKING:
 
 
 class RoleTag:
+
+    __slots__ = [
+        'bot_id',
+        'integration_id',
+        'premium_subscriber'
+    ]
+
     def __init__(self, **data):
         self.bot_id: Optional[Snowflake] = Snowflake(id=data.get('bot_id')) if data.get('bot_id') is not None else None
         self.integration_id: Optional[Snowflake] = Snowflake(id=data.get('integration_id')) \
