@@ -14,7 +14,7 @@ from .route import Route
 from .http import HTTPClient
 from .errors import ClientException, ReconnectWebSocket, ConnectionClosed, PriviledgedIntentsRequired
 from .message import Message
-from .utils import Snowflake
+from .utils import Snowflake, command_lists_equal
 from .flags import Intents
 from .enums import InteractionType, Event, ApplicationCommandType, PresenceStatus
 from .guild import Guild, Member, VoiceState
@@ -300,13 +300,17 @@ class Client:
         for c in self._command_registrar:
             if not c.get('global'):
                 continue
-            globals_to_override.append(c.get('ap').get_json_data())
-        _data = await self.http.request(Route('PUT',
-                                              f'/applications/{self.application.id}/commands'),
-                                        json=globals_to_override)
-        for d in _data:
+            globals_to_override.append(c.get('ap'))
+
+        _remote = [ApplicationCommand(**d, _client=self) for d in await self.http.request(Route(
+            'GET', f'/applications/{self.application.id}/commands'))]
+        if not command_lists_equal(globals_to_override, _remote):
+            _remote = [
+                ApplicationCommand(**x, _client=self) for x in await self.http.request(Route(
+                    'PUT', f'/applications/{self.application.id}/commands'),
+                    json=[g.get_json_data() for g in globals_to_override])]
+        for ap in _remote:
             callback = None
-            ap = ApplicationCommand(**d, _client=self)
             for c in self._command_registrar:
                 if not c.get('global'):
                     continue
@@ -314,6 +318,7 @@ class Client:
                     callback = c.get('callback')
                     break
             ap.callback = callback
+            print(ap.id, ' - ', ap.name)
             self._application_commands[ap.id] = ap
         # call ready event
         # for g in data.get('guilds', []):

@@ -17,6 +17,20 @@ def get_json_from_dict(data) -> str:
     return json.dumps(data)
 
 
+def command_lists_equal(local, remote) -> bool:
+    if len(local) != len(remote):
+        return False
+    for l in local:
+        found = False
+        for r in remote:
+            if l == r:
+                found = True
+                break
+        if not found:
+            return False
+    return True
+
+
 class Snowflake:
 
     __slots__ = [
