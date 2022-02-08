@@ -318,11 +318,8 @@ class Client:
                     callback = c.get('callback')
                     break
             ap.callback = callback
-            print(ap.id, ' - ', ap.name)
             self._application_commands[ap.id] = ap
         # call ready event
-        # for g in data.get('guilds', []):
-        #     await self._register_guild_commands(int(g['id']))
         for event in self._event_listener.get(Event.READY.value, []):
             await event()
 
@@ -349,7 +346,6 @@ class Client:
                 asyncio.ensure_future(self._play_guild_member_update(d))
         if self.build_member_cache:
             if len(g.members.keys()) < g.member_count:
-                logging.info(f'A: {len(g.members.keys())}, B: {g.member_count}')
                 await self.ws.request_guild_members(g.id)
             else:
                 logging.info(f'member cache for {g.id} was already filled, got {len(g.members.keys())}')
