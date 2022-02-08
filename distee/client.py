@@ -59,6 +59,8 @@ def _cleanup_loop(loop: asyncio.AbstractEventLoop) -> None:
 class Client:
 
     ws: DiscordWebSocket = None
+    shard_id: int = 0
+    shard_count: int = 1
     user: User = None
     http: HTTPClient
     loop = None

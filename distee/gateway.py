@@ -217,6 +217,7 @@ class DiscordWebSocket:
                 'token': self.token,
                 'compress': True,
                 'large_threshold': 250,
+                'shard': [self.client.shard_id, self.client.shard_count],
                 'intents': self.client.intents.value,
                 'properties': {
                     '$os': '',
