@@ -6,6 +6,12 @@ from .route import Route
 
 
 class ApplicationCommandOptionChoice:
+
+    __slots__ = [
+        'name',
+        'value'
+    ]
+
     name: str
     value: Union[str, int, float]
 
@@ -25,18 +31,28 @@ class ApplicationCommandOptionChoice:
 
 
 class ApplicationCommandOption:
+
+    __slots__ = [
+        'type',
+        'name',
+        'description',
+        'required',
+        'choices',
+        'options'
+    ]
+
     type: ApplicationCommandOptionType
     name: str
     description: str
-    required: bool = False
-    choices: List[ApplicationCommandOptionChoice] = None
-    options: List['ApplicationCommandOption'] = None
+    required: bool
+    choices: List[ApplicationCommandOptionChoice]
+    options: List['ApplicationCommandOption']
 
     def __init__(self, **data):
         self.type = data.get('type')
         self.name = data.get('name')
         self.description = data.get('description')
-        self.required = data.get('required')
+        self.required = data.get('required', False)
         if data.get('options') is None or len(data.get('options')) == 0:
             self.options: List[ApplicationCommandOption] = []
         elif isinstance(data.get('options')[0], ApplicationCommandOption):
@@ -50,7 +66,6 @@ class ApplicationCommandOption:
             self.choices: List[ApplicationCommandOptionChoice] = data.get('choices')
         else:
             self.choices: List[ApplicationCommandOptionChoice] = [ApplicationCommandOptionChoice(**d) for d in data.get('choices')]
-
 
     def get_json_data(self):
         return {
@@ -85,7 +100,22 @@ class ApplicationCommandOption:
 
 
 class ApplicationCommand(Snowflake):
-    
+
+    __slots__ = [
+        'type',
+        'application_id',
+        'guild_id',
+        'guild',
+        'name',
+        'description',
+        'default_permission',
+        'dm_permission',
+        'default_member_permissions',
+        'version',
+        'options',
+        'callback'
+    ]
+
     def __init__(self, **data):
         super(ApplicationCommand, self).__init__(**data)
         self.type: ApplicationCommandType = ApplicationCommandType(data.get('type', 1))
