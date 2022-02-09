@@ -38,15 +38,15 @@ class InteractionData(Snowflake):
         self.values: Optional[List] = data.get('values')
         self.options: Optional[List] = data.get('options')
         res = data.get('resolved')
-        self.messages: List[Message] = [Message(**d, _client=self._client) for d in
-                                        res.get('messages').values()] \
-            if res is not None and res.get('messages') is not None else []
-        self.users: List[User] = [User(**d, _client=self._client) for d in
-                                  res.get('users').values()] \
-            if res is not None and res.get('users') is not None else []
-        self.channels: List[BaseChannel] = [get_channel(**d, _client=self._client) for d in
-                                            res.get('channels').values()] \
-            if res is not None and res.get('channels') is not None else []
+        self.messages: Dict[Message] = {int(d['id']): Message(**d, _client=self._client) for d in
+                                        res.get('messages').values()} \
+            if res is not None and res.get('messages') is not None else {}
+        self.users: Dict[User] = {int(d['id']): User(**d, _client=self._client) for d in
+                                  res.get('users').values()} \
+            if res is not None and res.get('users') is not None else {}
+        self.channels: Dict[BaseChannel] = {int(d['id']): get_channel(**d, _client=self._client) for d in
+                                            res.get('channels').values()} \
+            if res is not None and res.get('channels') is not None else {}
 
         self.target_id: Optional[Snowflake] = snowflake_or_none(data.get('target_id'))
         self.components: Optional[Dict] = get_parsed_modal_components(data.get('components'))
