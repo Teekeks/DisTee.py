@@ -1,5 +1,6 @@
 import typing
 
+from .attachment import Attachment
 from .errors import WrongInteractionTypeException
 from .route import Route
 from .utils import Snowflake, snowflake_or_none, get_json_from_dict
@@ -38,14 +39,17 @@ class InteractionData(Snowflake):
         self.values: Optional[List] = data.get('values')
         self.options: Optional[List] = data.get('options')
         res = data.get('resolved')
-        self.messages: Dict[Message] = {int(d['id']): Message(**d, _client=self._client) for d in
-                                        res.get('messages').values()} \
+        self.messages: Dict[int, Message] = {int(d['id']): Message(**d, _client=self._client) for d in
+                                             res.get('messages').values()} \
             if res is not None and res.get('messages') is not None else {}
-        self.users: Dict[User] = {int(d['id']): User(**d, _client=self._client) for d in
-                                  res.get('users').values()} \
+        self.users: Dict[int, User] = {int(d['id']): User(**d, _client=self._client) for d in
+                                       res.get('users').values()} \
             if res is not None and res.get('users') is not None else {}
-        self.channels: Dict[BaseChannel] = {int(d['id']): get_channel(**d, _client=self._client) for d in
-                                            res.get('channels').values()} \
+        self.attachments: Dict[int, Attachment] = {int(d['id']): Attachment(**d, _client=self._client) for d in
+                                                   res.get('attachments').values()} \
+            if res is not None and res.get('attachments') is not None else {}
+        self.channels: Dict[int, BaseChannel] = {int(d['id']): get_channel(**d, _client=self._client) for d in
+                                                 res.get('channels').values()} \
             if res is not None and res.get('channels') is not None else {}
 
         self.target_id: Optional[Snowflake] = snowflake_or_none(data.get('target_id'))
