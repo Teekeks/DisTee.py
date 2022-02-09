@@ -15,6 +15,16 @@ if typing.TYPE_CHECKING:
     from .file import File
 
 
+def get_parsed_modal_components(data) -> Optional[dict]:
+    d = {}
+    if data is None:
+        return None
+    for line in data:
+        for comp in line.get('components', []):
+            d[comp['custom_id']] = comp
+    return d
+
+
 class InteractionData(Snowflake):
 
     def __init__(self, **data):
@@ -39,6 +49,7 @@ class InteractionData(Snowflake):
             if res is not None and res.get('channels') is not None else []
 
         self.target_id: Optional[Snowflake] = snowflake_or_none(data.get('target_id'))
+        self.components: Optional[Dict] = get_parsed_modal_components(data.get('components'))
         # FIXME implement missing things https://discord.com/developers/docs/interactions/receiving-and-responding#interaction-object-interaction-data-structure
 
 

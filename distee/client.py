@@ -283,7 +283,7 @@ class Client:
                 if self.command_listener is not None:
                     asyncio.ensure_future(self.command_listener(ac, interaction))
                 await ac.callback(interaction)
-            elif interaction.type == InteractionType.MESSAGE_COMPONENT:
+            elif interaction.type in (InteractionType.MESSAGE_COMPONENT, InteractionType.MODAL_SUBMIT):
                 if self.interaction_listener is not None:
                     asyncio.ensure_future(self.interaction_listener(interaction))
                 ac = self._interaction_handler.get(interaction.data.custom_id)
