@@ -214,7 +214,7 @@ class Modal:
                  components: List[BaseComponent]):
         self.custom_id = custom_id
         self.title = title
-        self.components: components
+        self.components = components
 
     def to_json(self):
         return {
