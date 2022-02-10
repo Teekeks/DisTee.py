@@ -192,9 +192,10 @@ class Client:
     async def _on_guild_role_delete(self, data: dict):
         guild = self.get_guild(int(data['guild_id']))
         role = guild.get_role(int(data['role_id']))
-        guild.roles.pop(int(data['role_id']))
-        for event in self._event_listener.get(Event.GUILD_ROLE_DELETED.value, []):
-            asyncio.ensure_future(event(role))
+        guild.roles.pop(int(data['role_id']), None)
+        if role is not None:
+            for event in self._event_listener.get(Event.GUILD_ROLE_DELETED.value, []):
+                asyncio.ensure_future(event(role))
 
     async def _on_guild_role_create(self, data: dict):
         guild = self.get_guild(int(data['guild_id']))
