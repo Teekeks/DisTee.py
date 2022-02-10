@@ -6,6 +6,7 @@ from .enums import ComponentType, ButtonStyle, TextInputType
 # BASE
 ########################################################################################################################
 
+
 class BaseComponent:
     __slots__ = [
         'type'
@@ -219,5 +220,5 @@ class Modal:
         return {
             'custom_id': self.custom_id,
             'title': self.title,
-            'components': [c.jo_json() for c in self.components]
+            'components': [c.to_json() for c in self.components]
         }
