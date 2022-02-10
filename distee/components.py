@@ -1,6 +1,6 @@
 from typing import List, Optional, Dict
 
-from enums import ComponentType, ButtonStyle, TextInputType
+from .enums import ComponentType, ButtonStyle, TextInputType
 
 ########################################################################################################################
 # BASE
