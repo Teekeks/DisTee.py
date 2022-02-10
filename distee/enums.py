@@ -65,6 +65,12 @@ class ComponentType(IntEnum):
     ACTION_ROW = 1
     BUTTON = 2
     SELECT_MENU = 3
+    TEXT_INPUT = 4
+
+
+class TextInputType(IntEnum):
+    SHORT = 1
+    PARAGRAPH = 2
 
 
 class ApplicationCommandOptionType(IntEnum):
@@ -96,6 +102,14 @@ class InteractionResponseType(IntEnum):
     DEFERRED_UPDATE_MESSAGE = 6
     UPDATE_MESSAGE = 7
     MODAL = 9
+
+
+class ButtonStyle(IntEnum):
+    PRIMARY = 1
+    SECONDARY = 2
+    SUCCESS = 3
+    DANGER = 4
+    LINK = 5
 
 
 class Event(Enum):

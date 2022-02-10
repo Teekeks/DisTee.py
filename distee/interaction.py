@@ -1,12 +1,13 @@
 import typing
 
 from .attachment import Attachment
+from .components import Modal
 from .errors import WrongInteractionTypeException
 from .route import Route
 from .utils import Snowflake, snowflake_or_none, get_json_from_dict
 from .enums import InteractionType, ApplicationCommandType, InteractionResponseType, ComponentType
 from .flags import InteractionCallbackFlags
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Union
 from .guild import Member
 from .user import User
 from .message import Message
@@ -177,9 +178,9 @@ class Interaction(Snowflake):
                                               interaction_token=self.token),
                                         json=json)
 
-    async def send_modal(self, data: Dict):
+    async def send_modal(self, data: Union[Dict, Modal]):
         json = {'type': InteractionResponseType.MODAL.value,
-                'data': data}
+                'data': data if isinstance(data, dict) else data.to_json()}
         await self._client.http.request(Route('POST',
                                               '/interactions/{interaction_id}/{interaction_token}/callback',
                                               interaction_id=self.id,
