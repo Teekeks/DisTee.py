@@ -5,8 +5,8 @@ if TYPE_CHECKING:
     from .client import Client
 
 VERSION = 'indef'
-GATEWAY_VERSION = 9
-API_VERSION = 9
+GATEWAY_VERSION = 10
+API_VERSION = 10
 
 
 def get_dict_from_json(data) -> dict:
