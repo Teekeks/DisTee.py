@@ -4,7 +4,6 @@ import typing
 from typing import Optional, Iterable, Dict, Any, List
 
 
-from .utils import Snowflake
 import aiohttp
 from aiohttp import ClientSession, ClientResponse
 from . import utils
