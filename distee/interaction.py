@@ -4,7 +4,7 @@ from .attachment import Attachment
 from .components import Modal
 from .errors import WrongInteractionTypeException
 from .route import Route
-from .utils import Snowflake, snowflake_or_none, get_json_from_dict
+from .utils import Snowflake, snowflake_or_none, get_json_from_dict, get_components
 from .enums import InteractionType, ApplicationCommandType, InteractionResponseType, ComponentType
 from .flags import InteractionCallbackFlags
 from typing import Optional, List, Dict, Union
@@ -15,6 +15,7 @@ from .channel import BaseChannel, get_channel
 
 if typing.TYPE_CHECKING:
     from .file import File
+    from .components import BaseComponent
 
 
 def get_parsed_modal_components(data) -> Optional[dict]:
@@ -96,7 +97,7 @@ class Interaction(Snowflake):
                    content: Optional[str] = None,
                    embeds: Optional[List[dict]] = None,
                    allowed_mentions: Optional[dict] = None,
-                   components: Optional[List[dict]] = None,
+                   components: Optional[List[Union[dict, 'BaseComponent']]] = None,
                    ephemeral: Optional[bool] = None):
         """ACK interaction and edit component message"""
         if self.type != InteractionType.MESSAGE_COMPONENT:
@@ -106,7 +107,7 @@ class Interaction(Snowflake):
                         'content': content,
                         'flags': 1 << 6 if ephemeral else None,
                         'tts': tts,
-                        'components': components,
+                        'components': get_components(components),
                         'embeds': embeds,
                         'allowed_mentions': allowed_mentions
                     }.items() if v is not None}}
@@ -121,7 +122,7 @@ class Interaction(Snowflake):
                    embeds: Optional[List[dict]] = None,
                    tts: Optional[bool] = None,
                    allowed_mentions: Optional[dict] = None,
-                   components: Optional[List[dict]] = None,
+                   components: Optional[List[Union[dict, 'BaseComponent']]] = None,
                    stickers: Optional[List] = None,
                    nonce: Optional[str] = None,
                    ephemeral: Optional[bool] = None):
@@ -131,7 +132,7 @@ class Interaction(Snowflake):
                         'content': content,
                         'flags': 1 << 6 if ephemeral else None,
                         'tts': tts,
-                        'components': components,
+                        'components': get_components(components),
                         'embeds': embeds,
                         'sticker_ids': stickers,
                         'nonce': nonce,
@@ -147,7 +148,7 @@ class Interaction(Snowflake):
                             content: str = None,
                             tts: bool = False,
                             embeds: Optional[List[dict]] = None,
-                            components: Optional[List] = None,
+                            components: Optional[List[Union[dict, 'BaseComponent']]] = None,
                             allowed_mentions: Optional[dict] = None,
                             stickers: Optional[List] = None,
                             nonce: Optional[str] = None,
@@ -158,7 +159,7 @@ class Interaction(Snowflake):
                                                           '/webhooks/{application_id}/{interaction_token}',
                                                           application_id=self.application_id,
                                                           interaction_token=self.token),
-                                                    components=components,
+                                                    components=get_components(components),
                                                     content=content,
                                                     tts=tts,
                                                     embeds=embeds,
