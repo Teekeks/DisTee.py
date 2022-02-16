@@ -64,6 +64,7 @@ class Client:
     user: User = None
     http: HTTPClient
     loop = None
+    shutdown_handler = None
     _closed = False
     _raw_gateway_listener = {}
     _event_listener = {}
@@ -481,6 +482,8 @@ class Client:
         except KeyboardInterrupt:
             logging.info('shutting down due to keyboard interrupt.')
         finally:
+            if self.shutdown_handler is not None:
+                self.shutdown_handler()
             future.remove_done_callback(stop_loop_on_completion)
             _cleanup_loop(self.loop)
         if not future.cancelled():
