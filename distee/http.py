@@ -1,8 +1,7 @@
 import asyncio
 import json
 import typing
-from typing import Optional, Iterable, Dict, Any, List
-
+from typing import Optional, Iterable, Dict, Any, List, Union
 
 import aiohttp
 from aiohttp import ClientSession, ClientResponse
@@ -15,6 +14,7 @@ from .route import Route
 if typing.TYPE_CHECKING:
     from .file import File
     from .client import Client
+    from .components import BaseComponent
 
 
 async def get_json_or_str(response: ClientResponse):
@@ -95,7 +95,7 @@ class HTTPClient:
                            allowed_mentions: Optional[Dict] = None,
                            message_reference: Optional[Dict] = None,
                            stickers: Optional[List] = None,
-                           components: Optional[List] = None,
+                           components: Optional[List[Union[dict, 'BaseComponent']]] = None,
                            flags: Optional[int] = None) -> 'Message':
         payload = {'tts': tts}
         form = []
@@ -106,7 +106,7 @@ class HTTPClient:
         if embeds is not None:
             payload['embeds'] = embeds
         if components is not None:
-            payload['components'] = components
+            payload['components'] = utils.get_components(components)
         if allowed_mentions is not None:
             payload['allowed_mentions'] = allowed_mentions
         form.append({'name': 'payload_json', 'value': json.dumps(payload)})
@@ -125,7 +125,7 @@ class HTTPClient:
                            allowed_mentions: Optional[Dict] = None,
                            message_reference: Optional[Dict] = None,
                            stickers: Optional[List] = None,
-                           components: Optional[List] = None,
+                           components: Optional[List[Union[dict, 'BaseComponent']]] = None,
                            flags: Optional[int] = None) -> 'Message':
         if files is not None:
             return await self.send_multipart(route,
@@ -149,7 +149,7 @@ class HTTPClient:
         if embeds is not None:
             payload['embeds'] = embeds
         if components is not None:
-            payload['components'] = components
+            payload['components'] = utils.get_components(components)
         if allowed_mentions is not None:
             payload['allowed_mentions'] = allowed_mentions
         if nonce is not None:
@@ -173,7 +173,7 @@ class HTTPClient:
                              allowed_mentions: Optional[Dict] = None,
                              message_reference: Optional[Dict] = None,
                              stickers: Optional[List] = None,
-                             components: Optional[List] = None,
+                             components: Optional[List[Union[dict, 'BaseComponent']]] = None,
                              flags: Optional[int] = None) -> 'Message':
         payload = {'tts': tts}
         form = []
@@ -184,7 +184,7 @@ class HTTPClient:
         if embeds is not None:
             payload['embeds'] = embeds
         if components is not None:
-            payload['components'] = components
+            payload['components'] = utils.get_components(components)
         if allowed_mentions is not None:
             payload['allowed_mentions'] = allowed_mentions
         if nonce is not None:
