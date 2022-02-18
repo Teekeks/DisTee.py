@@ -37,12 +37,14 @@ class Message(Snowflake):
         self.flags = args.get('flags')
 
         self.guild: Optional[Guild] = self._client.get_guild(self.guild_id) if self._client is not None else None
-        self.channel: Optional[TextChannel] = self.guild.get_channel(self.channel_id) \
-            if self.guild is not None else None
         self.author: Optional[Union[User, Member]] = self.guild.get_member(self.author_id) \
             if self.guild is not None else None
         if self.author is None and self._client is not None:
             self.author = self._client.get_user(self.author_id)
+        self.channel: Optional[TextChannel] = self.guild.get_channel(self.channel_id) \
+            if self.guild is not None else None
+        if self.channel is None and not isinstance(self.author, Member):
+            self.channel = self.author.dm_channel
         self.embeds: Optional[List] = args.get('embeds')
         self.components: Optional[List] = args.get('components')
         # FIXME implement all of the message object https://discord.com/developers/docs/resources/channel#message-object
