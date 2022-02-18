@@ -195,7 +195,8 @@ class Guild(Snowflake):
         self.widget_enabled: Optional[bool] = kwargs.get('widgets_enabled')
         self.widget_channel_id: Optional[Snowflake] = Snowflake(id=kwargs.get('widget_channel_id')) \
             if kwargs.get('widget_channel_id') is not None else None
-        self.verification_level: GuildVerificationLevel = GuildVerificationLevel(kwargs.get('verification_level'))
+        self.verification_level: GuildVerificationLevel = GuildVerificationLevel(kwargs.get('verification_level')) \
+            if kwargs.get('verification_level') is not None else None
         self.default_message_notifications: MessageNotificationLevel = \
             MessageNotificationLevel(kwargs.get('default_message_notifications'))
         self.explicit_content_filter: ExplicitContentFilterLevel = \
