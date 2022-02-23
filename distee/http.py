@@ -236,6 +236,7 @@ class HTTPClient:
 
         if kwargs.get('reason'):
             headers['X-Audit-Log-Reason'] = kwargs.pop('reason')
+        kwargs.pop('reason', None)
 
         kwargs['headers'] = headers
 
