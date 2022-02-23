@@ -3,12 +3,10 @@ import typing
 from .utils import Snowflake
 from typing import Optional, Union, List
 from .route import Route
-import json
-from .guild import Member
 
 if typing.TYPE_CHECKING:
     from .channel import TextChannel
-    from .guild import Guild
+    from .guild import Guild, Member
     from .user import User
 
 
@@ -44,8 +42,6 @@ class Message(Snowflake):
             self.author = self._client.get_user(self.author_id)
         self.channel: Optional[TextChannel] = self.guild.get_channel(self.channel_id) \
             if self.guild is not None else None
-        if self.channel is None and not isinstance(self.author, Member):
-            self.channel = self.author.dm_channel
         self.embeds: Optional[List] = args.get('embeds')
         self.components: Optional[List] = args.get('components')
         # FIXME implement all of the message object https://discord.com/developers/docs/resources/channel#message-object
