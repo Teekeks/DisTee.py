@@ -4,10 +4,11 @@ from .utils import Snowflake
 from typing import Optional, Union, List
 from .route import Route
 import json
+from .guild import Member
 
 if typing.TYPE_CHECKING:
     from .channel import TextChannel
-    from .guild import Guild, Member
+    from .guild import Guild
     from .user import User
 
 
