@@ -69,7 +69,7 @@ class Messageable:
             payload['allowed_mentions'] = allowed_mentions
         form.append({'name': 'payload_json', 'value': json.dumps(payload)})
         d = await self._client.http.request(Route('PATCH',
-                                                  '/channels/{channel_id}/messages{message_id}',
+                                                  '/channels/{channel_id}/messages/{message_id}',
                                                   channel_id=channel.id,
                                                   message_id=msg_id),
                                             form=form)
