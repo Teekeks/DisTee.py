@@ -3,6 +3,7 @@ import json
 from distee.route import Route
 from distee.utils import Snowflake
 from distee.message import Message
+from . import utils
 
 if TYPE_CHECKING:
     from distee.channel import MessageableChannel
@@ -63,7 +64,7 @@ class Messageable:
         if embeds is not None:
             payload['embeds'] = embeds
         if components is not None:
-            payload['components'] = components
+            payload['components'] = utils.get_components(components)
         if allowed_mentions is not None:
             payload['allowed_mentions'] = allowed_mentions
         form.append({'name': 'payload_json', 'value': json.dumps(payload)})
