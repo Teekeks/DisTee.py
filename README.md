@@ -17,10 +17,10 @@ client = Client()
 
 class MyCog(Cog):
     def register():
-      ap = ApplicationCommand(
-            name='ping',
-            description='A ping command')
-      self.client.register_command(ap, self.handle_ping, True, None)  # register as global slash command
+        ap = ApplicationCommand(
+              name='ping',
+              description='A ping command')
+        self.client.register_command(ap, self.handle_ping, True, None)  # register as global slash command
    
    
    async def handle_ping(inter: Interaction):
