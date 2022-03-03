@@ -3,7 +3,7 @@ Python wrapper for the Discord API
 
 ## Please note that this library is not intended for public usage!
 **This library only contains the parts of the Discord API that I need for my personal projects and breaking changes can and will occur without any notice.**
-if you still insist on using it despite these warnings, you can do so using this:
+If you still insist on using it despite these warnings, you can do so using this:
 
 ```py
 
@@ -33,7 +33,7 @@ class MyCog(Cog):
        
    
    # example raw gateway event
-   @Cog.raw_event('READY'):
+   @Cog.raw_event('READY')
    async def on_ready_event(data: dict):
        print('Got the raw ready event!')
 
