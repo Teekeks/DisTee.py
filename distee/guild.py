@@ -264,7 +264,7 @@ class Guild(Snowflake):
         self._channels[channel.id] = channel
 
     async def handle_channel_delete(self, data: dict):
-        self._channels.pop(int(data['id']))
+        self._channels.pop(int(data['id']), None)
 
     async def handle_member_chunk(self, data: dict):
         for m_data in data['members']:
