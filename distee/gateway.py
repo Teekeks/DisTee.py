@@ -57,7 +57,7 @@ class HeartbeatThread(threading.Thread):
         self._last_ack = ack_time
         self.latency = ack_time - self._last_send
         if self.latency > 10:
-            logging.warning(f'Can\'t keep up, gateway is {self.latency:,2f}s behind')
+            logging.warning(f'Can\'t keep up, gateway is {self.latency:.2f}s behind')
         pass
 
     def stop(self):
