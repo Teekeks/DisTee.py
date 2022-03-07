@@ -82,7 +82,7 @@ class Interaction(Snowflake):
         self.locale: Optional[str] = data.get('locale')
         self.guild_locale: Optional[str] = data.get('guild_locale')
 
-    async def defer_message_edit(self):
+    async def defer_update_message(self):
         """ACK component interaction now and edit message later"""
         if self.type != InteractionType.MESSAGE_COMPONENT:
             raise WrongInteractionTypeException()
@@ -92,13 +92,13 @@ class Interaction(Snowflake):
                                               interaction_token=self.token),
                                         json={'type': InteractionResponseType.DEFERRED_UPDATE_MESSAGE.value, 'data': {}})
 
-    async def edit(self,
-                   tts: Optional[bool] = None,
-                   content: Optional[str] = None,
-                   embeds: Optional[List[dict]] = None,
-                   allowed_mentions: Optional[dict] = None,
-                   components: Optional[List[Union[dict, 'BaseComponent']]] = None,
-                   ephemeral: Optional[bool] = None):
+    async def update_message(self,
+                             content: Optional[str] = None,
+                             tts: Optional[bool] = None,
+                             embeds: Optional[List[dict]] = None,
+                             allowed_mentions: Optional[dict] = None,
+                             components: Optional[List[Union[dict, 'BaseComponent']]] = None,
+                             ephemeral: Optional[bool] = None):
         """ACK interaction and edit component message"""
         if self.type != InteractionType.MESSAGE_COMPONENT:
             raise WrongInteractionTypeException()
