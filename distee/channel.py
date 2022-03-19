@@ -142,7 +142,7 @@ class TextChannel(GuildChannel, MessageableChannel):
         self.topic = new_topic
 
 
-class VoiceChannel(GuildChannel):
+class VoiceChannel(TextChannel):
 
     __slots__ = [
         'bitrate',
