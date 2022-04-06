@@ -64,6 +64,34 @@ class HeartbeatThread(threading.Thread):
         self.stop_event.set()
 
 
+class GatewayRateLimiter:
+
+    def __init__(self):
+        self.lock: asyncio.Lock = asyncio.Lock()
+        self.remaining = 110
+        self.max = 110
+        self.window = 0.0
+        self.per = 60.0
+
+    def get_delay(self):
+        current = time.time()
+        if current > self.window + self.per:
+            self.remaining = self.max
+        if self.remaining == self.max:
+            self.window = current
+        if self.remaining == 0:
+            return self.per - (current - self.window)
+        self.remaining -= 1
+        return 0.0
+
+    async def block(self):
+        async with self.lock:
+            delta = self.get_delay()
+            if delta:
+                logging.warning('WebSocket is ratelimited, waiting %.2f seconds', delta)
+                await asyncio.sleep(delta)
+
+
 class DiscordWebSocket:
     # web socket opt codes
     DISPATCH = 0
@@ -89,11 +117,14 @@ class DiscordWebSocket:
 
     def __init__(self, client):
         self.client = client
+        self._rate_limiter = GatewayRateLimiter()
         self.heartbeat_manager: HeartbeatThread = None
         self.loop = client.loop
         pass
 
-    async def send_as_json(self, payload: dict):
+    async def send_as_json(self, payload: dict, ignore_rate_limit: bool = False):
+        if not ignore_rate_limit:
+            await self._rate_limiter.block()
         try:
             await self.socket.send_json(payload)
         except RuntimeError as e:
