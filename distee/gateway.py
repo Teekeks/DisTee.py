@@ -204,7 +204,7 @@ class DiscordWebSocket:
         await self.socket.close(code=code)
 
     async def send_heartbeat(self):
-        await self.send_as_json(self.heartbeat_manager.get_payload())
+        await self.send_as_json(self.heartbeat_manager.get_payload(), ignore_rate_limit=True)
 
     def _can_handle_close(self):
         return self.socket.close_code not in (1000, 4004, 4010, 4011, 4012, 4013, 4014)
