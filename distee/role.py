@@ -43,7 +43,7 @@ class Role(Snowflake):
         self.copy(**data)
 
     def copy(self, **data):
-        self.guild: 'Guild' = data.get('_guild')
+        self.guild: 'Guild' = data.get('guild') if data.get('guild') is not None else data.get('_guild')
         self.name: str = data.get('name')
         self.color: int = data.get('color')
         self.hoist: bool = data.get('hoist')
