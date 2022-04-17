@@ -159,7 +159,7 @@ class Client:
             return
         role = guild.get_role(int(data['role']['id']))
         # old_role = deepcopy(role)
-        role.copy(**data['role'])
+        role.copy(**data['role'], _guild=guild)
         # for event in self._event_listener.get(Event.GUILD_ROLE_UPDATED.value, []):
         #    asyncio.ensure_future(event(old_role, role))
 
