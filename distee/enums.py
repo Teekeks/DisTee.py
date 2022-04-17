@@ -128,6 +128,8 @@ class Event(Enum):
 
     MESSAGE_SEND = 'message_send'
 
+    CHANNEL_DELETE = 'channel_delete'
+
 
 class PresenceStatus(Enum):
     ONLINE = 'online'

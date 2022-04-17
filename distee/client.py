@@ -188,6 +188,9 @@ class Client:
         if guild is None:
             logging.warning(f'skipped channel delete event: guild {int(data["guild_id"])} not present')
             return
+        channel = guild.get_channel(int(data['id']))
+        for event in self._event_listener.get(Event.CHANNEL_DELETE.value, []):
+            asyncio.ensure_future(event(channel))
         await guild.handle_channel_delete(data)
 
     async def _on_guild_role_delete(self, data: dict):
