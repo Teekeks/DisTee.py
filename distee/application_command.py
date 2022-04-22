@@ -80,7 +80,7 @@ class ApplicationCommandOption:
             'choices': [{'name': d.name, 'value': d.value} for d in self.choices]
         }
         if self.channel_types is not None and len(self.channel_types) > 0:
-            dat['channel_types'] = self.channel_types
+            dat['channel_types'] = [i.value for i in self.channel_types]
         return dat
 
     def __eq__(self, other):
