@@ -1,6 +1,6 @@
 from .utils import Snowflake
-from .enums import ApplicationCommandType, ApplicationCommandOptionType
-from typing import Optional, List, Union
+from .enums import ApplicationCommandType, ApplicationCommandOptionType, ChannelType
+from typing import Optional, List, Union, TYPE_CHECKING
 from .guild import Guild
 from .route import Route
 
@@ -38,7 +38,8 @@ class ApplicationCommandOption:
         'description',
         'required',
         'choices',
-        'options'
+        'options',
+        'channel_types'
     ]
 
     type: ApplicationCommandOptionType
@@ -47,12 +48,14 @@ class ApplicationCommandOption:
     required: bool
     choices: List[ApplicationCommandOptionChoice]
     options: List['ApplicationCommandOption']
+    channel_types: List[ChannelType]
 
     def __init__(self, **data):
         self.type = data.get('type')
         self.name = data.get('name')
         self.description = data.get('description')
         self.required = data.get('required', False)
+        self.channel_types = data.get('channel_types')
         if data.get('options') is None or len(data.get('options')) == 0:
             self.options: List[ApplicationCommandOption] = []
         elif isinstance(data.get('options')[0], ApplicationCommandOption):
@@ -84,6 +87,8 @@ class ApplicationCommandOption:
                 self.required != other.required:
             return False
         if len(self.options) != len(other.options):
+            return False
+        if self.channel_types != other.channel_types:
             return False
         for i in range(len(self.options)):
             if self.options[i] != other.options[i]:
