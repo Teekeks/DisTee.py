@@ -342,10 +342,7 @@ class Client:
 
     async def _on_guild_create(self, data: dict):
         g = Guild(**data, _client=self)
-        if g.id not in self._guilds.keys():
-            # new guild!
-            for event in self._event_listener.get(Event.GUILD_JOINED.value, []):
-                await event(g)
+        is_new = g.id not in self._guilds.keys()
         self._guilds[g.id] = g
         if self._member_update_replay.get(g.id) is not None:
             dat = self._member_update_replay.pop(g.id)
@@ -358,6 +355,10 @@ class Client:
                 logging.info(f'member cache for {g.id} was already filled, got {len(g.members.keys())}')
         # register server specific commands on join
         await self._register_guild_commands(g.id)
+        if is_new:
+            # new guild!
+            for event in self._event_listener.get(Event.GUILD_JOINED.value, []):
+                asyncio.ensure_future(event(g))
 
     async def _register_guild_commands(self, gid: int):
         for c in self._command_registrar:
