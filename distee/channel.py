@@ -180,7 +180,7 @@ def get_channel(**data):
     if t == ChannelType.GUILD_STORE:
         return GuildChannel(**data)
     # FIXME: make this proper
-    if t == ChannelType.FORUM_CHANNEL:
+    if t == ChannelType.GUILD_FORUM:
         return GuildChannel(**data)
     if t == ChannelType.GUILD_DIRECTORY:
         return GuildChannel(**data)
