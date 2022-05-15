@@ -159,6 +159,9 @@ class ApplicationCommand(Snowflake):
             ret['dm_permission'] = self.dm_permission
         if self.default_member_permissions is not None:
             ret['default_member_permissions'] = self.default_member_permissions
+        # do not pass the description if its a suer or message command
+        if self.type in (ApplicationCommandType.USER, ApplicationCommandType.MESSAGE):
+            ret.pop('description')
         return ret
 
     def is_global(self):
