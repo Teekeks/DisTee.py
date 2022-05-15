@@ -152,7 +152,7 @@ class ApplicationCommand(Snowflake):
             'name': self.name,
             'description': self.description,
             'type': self.type.value,
-            'default_permission': self.default_permission,
+            # 'default_permission': self.default_permission,
             'options': [d.get_json_data() for d in self.options]
         }
         if self.dm_permission is not None:
