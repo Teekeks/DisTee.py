@@ -42,7 +42,7 @@ class InteractionData(Snowflake):
         self.values: Optional[List] = data.get('values')
         self.options: Optional[List] = data.get('options')
         res = data.get('resolved')
-        self.members: Dict[int, Member] = {int(d['id']): Member(**d, _client=self._client, _guild=self._interaction.guild) for d in
+        self.members: Dict[int, Member] = {int(d['user']['id']): Member(**d, _client=self._client, _guild=self._interaction.guild) for d in
                                            res.get('members').values()}
         self.messages: Dict[int, Message] = {int(d['id']): Message(**d, _client=self._client) for d in
                                              res.get('messages').values()} \
