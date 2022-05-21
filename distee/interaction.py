@@ -43,7 +43,8 @@ class InteractionData(Snowflake):
         self.options: Optional[List] = data.get('options')
         res = data.get('resolved')
         self.members: Dict[int, Member] = {int(d['user']['id']): Member(**d, _client=self._client, _guild=self._interaction.guild) for d in
-                                           res.get('members').values()}
+                                           res.get('members').values()} \
+            if res is not None and res.get('members') is not None else {}
         self.messages: Dict[int, Message] = {int(d['id']): Message(**d, _client=self._client) for d in
                                              res.get('messages').values()} \
             if res is not None and res.get('messages') is not None else {}
