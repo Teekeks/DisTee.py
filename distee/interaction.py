@@ -8,7 +8,7 @@ from .utils import Snowflake, snowflake_or_none, get_json_from_dict, get_compone
 from .enums import InteractionType, ApplicationCommandType, InteractionResponseType, ComponentType
 from .flags import InteractionCallbackFlags
 from typing import Optional, List, Dict, Union
-from .guild import Member
+from .guild import Member, Guild
 from .user import User
 from .message import Message
 from .channel import BaseChannel, get_channel
@@ -32,6 +32,7 @@ class InteractionData(Snowflake):
 
     def __init__(self, **data):
         super(InteractionData, self).__init__(**data)
+        self._interaction: 'Interaction' = data.get('_interaction')
         self.name: str = data.get('name')
         self.type: ApplicationCommandType = ApplicationCommandType(data.get('type')) \
             if data.get('type') is not None else None
@@ -41,6 +42,8 @@ class InteractionData(Snowflake):
         self.values: Optional[List] = data.get('values')
         self.options: Optional[List] = data.get('options')
         res = data.get('resolved')
+        self.members: Dict[int, Member] = {int(d['id']): Member(**d, _client=self._client, _guild=self._interaction.guild) for d in
+                                           res.get('members').values()}
         self.messages: Dict[int, Message] = {int(d['id']): Message(**d, _client=self._client) for d in
                                              res.get('messages').values()} \
             if res is not None and res.get('messages') is not None else {}
@@ -66,6 +69,7 @@ class Interaction(Snowflake):
         self.application_id: Optional[Snowflake] = Snowflake(id=data.get('application_id'))
         self.type: InteractionType = InteractionType(data.get('type'))
         self.guild_id: Optional[Snowflake] = snowflake_or_none(data.get('guild_id'))
+        self.guild: Optional[Guild] = self._client.get_guild(self.guild_id) if self.guild_id is not None else None
         self.channel_id: Optional[Snowflake] = snowflake_or_none(data.get('channel_id'))
         self.member: Optional[Member] = Member(**data.get('member'),
                                                _client=self._client,
@@ -75,7 +79,7 @@ class Interaction(Snowflake):
             if data.get('user') is not None else None
         self.token: str = data.get('token')
         self.version: int = data.get('version')
-        self.data: Optional[InteractionData] = InteractionData(**data.get('data'), _client=self._client) \
+        self.data: Optional[InteractionData] = InteractionData(**data.get('data'), _client=self._client, _interaction=self) \
             if data.get('data') is not None else None
         self.message: Optional[Message] = Message(**data.get('message'), _client=self._client) \
             if data.get('message') is not None else None
