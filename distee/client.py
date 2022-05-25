@@ -84,6 +84,7 @@ class Client:
     gateway_listener = None
     interaction_listener = None
     command_listener = None
+    interaction_error_listener = None
 
     @property
     def guilds(self):
@@ -273,6 +274,7 @@ class Client:
         guild._members.pop(int(data['user']['id']), None)
 
     async def _on_interaction_create(self, data: dict):
+        interaction = None
         try:
             interaction = Interaction(**data, _client=self)
             _id = interaction.data.id
@@ -296,8 +298,13 @@ class Client:
                     logging.exception(f'could not find handler for interaction with custom id {interaction.data.custom_id}')
                     return
                 await ac(interaction)
-        except:
+        except Exception as e:
             logging.exception('Exception while handling interaction:')
+            if self.interaction_error_listener is not None:
+                try:
+                    await self.interaction_error_listener(interaction, e)
+                except:
+                    logging.exception('Exception in interaction exception handler while handling a exception')
 
     async def _on_ready(self, data: dict):
         for g in data.get('guilds', []):
