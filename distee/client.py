@@ -302,11 +302,8 @@ class Client:
                     # check if var interaction exists
                     match = INTER_REGEX.fullmatch(interaction.data.custom_id)
                     if match is not None:
-                        # check if var interaction handler exists
-                        inter_name = match[1]
-                        var_name = match[2]
-                        interaction.custom_id_var = var_name
-                        ac = self._interaction_handler.get(inter_name + '_{var}')
+                        interaction.custom_id_var = match[2]
+                        ac = self._interaction_handler.get(match[1] + '_{var}')
                 if ac is None:
                     logging.exception(f'could not find handler for interaction with custom id {interaction.data.custom_id}')
                     return
