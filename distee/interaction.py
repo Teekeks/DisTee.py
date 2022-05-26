@@ -177,6 +177,31 @@ class Interaction(Snowflake):
                                                     nonce=nonce,
                                                     files=files)
 
+    async def edit_original(self,
+                            content: str = None,
+                            tts: bool = False,
+                            embeds: Optional[List[dict]] = None,
+                            components: Optional[List[Union[dict, 'BaseComponent']]] = None,
+                            allowed_mentions: Optional[dict] = None,
+                            stickers: Optional[List] = None,
+                            nonce: Optional[str] = None,
+                            files: Optional['File'] = None,
+                            ephemeral: Optional[bool] = None):
+        """edit the original message of this interaction"""
+        return await self._client.http.send_message(Route('PATCH',
+                                                          '/webhooks/{application_id}/{interaction_token}/messages/@original',
+                                                          application_id=self.application_id,
+                                                          interaction_token=self.token),
+                                                    components=get_components(components),
+                                                    content=content,
+                                                    tts=tts,
+                                                    embeds=embeds,
+                                                    allowed_mentions=allowed_mentions,
+                                                    flags=1 << 6 if ephemeral else None,
+                                                    stickers=stickers,
+                                                    nonce=nonce,
+                                                    files=files)
+
     async def defer_send(self, ephemeral: Optional[bool] = None):
         """ACK now and use send later"""
         json = {'type': InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE.value,
