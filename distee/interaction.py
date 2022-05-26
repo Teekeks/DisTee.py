@@ -108,7 +108,7 @@ class Interaction(Snowflake):
                              components: Optional[List[Union[dict, 'BaseComponent']]] = None,
                              ephemeral: Optional[bool] = None):
         """ACK interaction and edit component message"""
-        if self.type != InteractionType.MESSAGE_COMPONENT:
+        if self.type not in (InteractionType.MESSAGE_COMPONENT, InteractionType.MODAL_SUBMIT):
             raise WrongInteractionTypeException()
         json = {'type': InteractionResponseType.UPDATE_MESSAGE.value,
                 'data': {k: v for k, v in {
