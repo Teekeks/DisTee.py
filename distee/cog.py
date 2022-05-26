@@ -21,12 +21,16 @@ class Cog:
         for event in events['interaction']:
             custom_id = getattr(event, '__event_name__')
             self.client._interaction_handler[custom_id] = event
+        for event in events['autocomplete']:
+            name = getattr(event, '__event_name__')
+            self.client._autocomplete_handler[name] = event
 
     def __get_events(self):
         vals = {
             'full': [],
             'raw': [],
-            'interaction': []
+            'interaction': [],
+            'autocomplete': []
         }
         for v in dir(self):
             value = getattr(self, v)
@@ -64,6 +68,15 @@ class Cog:
             func.__event_type__ = 'interaction'
             return func
 
+        return decorator
+
+    @classmethod
+    def autocomplete_handler(cls,
+                             command_name: str):
+        def decorator(func):
+            func.__event_name__ = command_name
+            func.__event_type__ = 'autocomplete'
+            return func
         return decorator
 
 

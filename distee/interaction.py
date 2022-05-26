@@ -1,5 +1,6 @@
 import typing
 
+from .application_command import ApplicationCommandOptionChoice
 from .attachment import Attachment
 from .components import Modal
 from .errors import WrongInteractionTypeException
@@ -194,3 +195,16 @@ class Interaction(Snowflake):
                                               interaction_id=self.id,
                                               interaction_token=self.token),
                                         form=[{'name': 'payload_json', 'value': get_json_from_dict(json)}])
+
+    async def automod_options(self, choices: List[ApplicationCommandOptionChoice]):
+        json = {
+            'type': InteractionResponseType.APPLICATION_COMMAND_AUTOCOMPLETE_RESULT.value,
+            'data': {
+                'choices': [c.to_json() for c in choices]
+            }
+        }
+        await self._client.http.request(Route('POST',
+                                              '/interactions/{interaction_id}/{interaction_token}/callback',
+                                              interaction_id=self.id,
+                                              interaction_token=self.token),
+                                        json=json)

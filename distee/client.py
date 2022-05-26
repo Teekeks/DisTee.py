@@ -83,6 +83,7 @@ class Client:
     build_user_cache: bool = True
     _application_commands: Dict[int, ApplicationCommand] = {}
     _interaction_handler: Dict[str, Callable] = {}
+    _autocomplete_handler: Dict[str, Callable] = {}
     _command_registrar: List[Dict] = []
 
     gateway_listener = None
@@ -306,6 +307,12 @@ class Client:
                         ac = self._interaction_handler.get(match[1] + '_{var}')
                 if ac is None:
                     logging.exception(f'could not find handler for interaction with custom id {interaction.data.custom_id}')
+                    return
+                await ac(interaction)
+            elif interaction.type == InteractionType.APPLICATION_COMMAND_AUTOCOMPLETE:
+                ac = self._autocomplete_handler.get(interaction.data.name)
+                if ac is None:
+                    logging.error(f'could not find autocomplete handler for command {interaction.data.name} ({interaction.data.id}')
                     return
                 await ac(interaction)
         except Exception as e:
@@ -537,6 +544,13 @@ class Client:
                             custom_id: Optional[str] = None):
         def decorator(func):
             self._interaction_handler[custom_id] = func
+            return func
+        return decorator
+
+    def autocomplete_handler(self,
+                             command_name: str):
+        def decorator(func):
+            self._autocomplete_handler[command_name] = func
             return func
         return decorator
 

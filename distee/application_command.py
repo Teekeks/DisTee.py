@@ -29,6 +29,12 @@ class ApplicationCommandOptionChoice:
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def to_json(self):
+        return {
+            'name': self.name,
+            'value': self.value
+        }
+
 
 class ApplicationCommandOption:
 
@@ -39,7 +45,8 @@ class ApplicationCommandOption:
         'required',
         'choices',
         'options',
-        'channel_types'
+        'channel_types',
+        'autocomplete'
     ]
 
     type: ApplicationCommandOptionType
@@ -69,6 +76,7 @@ class ApplicationCommandOption:
             self.choices: List[ApplicationCommandOptionChoice] = data.get('choices')
         else:
             self.choices: List[ApplicationCommandOptionChoice] = [ApplicationCommandOptionChoice(**d) for d in data.get('choices')]
+        self.autocomplete: bool = data.get('autocomplete', False)
 
     def get_json_data(self):
         dat = {
@@ -77,7 +85,8 @@ class ApplicationCommandOption:
             'description': self.description,
             'required': self.required,
             'options': [d.get_json_data() for d in self.options],
-            'choices': [{'name': d.name, 'value': d.value} for d in self.choices]
+            'choices': [{'name': d.name, 'value': d.value} for d in self.choices],
+            'autocomplete': self.autocomplete
         }
         if self.channel_types is not None and len(self.channel_types) > 0:
             dat['channel_types'] = [i.value for i in self.channel_types]
@@ -88,6 +97,8 @@ class ApplicationCommandOption:
             return False
         if self.type != other.type or self.name != other.name or self.description != other.description or \
                 self.required != other.required:
+            return False
+        if self.autocomplete != other.autocomplete:
             return False
         if len(self.options) != len(other.options):
             return False
