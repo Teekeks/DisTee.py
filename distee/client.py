@@ -305,6 +305,8 @@ class Client:
                         # check if var interaction handler exists
                         inter_name = match[0]
                         var_name = match[1]
+                        print(inter_name)
+                        print(var_name)
                         interaction.custom_id_var = var_name
                         ac = self._interaction_handler.get(inter_name + '_{var}')
                 if ac is None:
