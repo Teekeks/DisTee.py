@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import re
 import signal
 import typing
 from copy import deepcopy
@@ -54,6 +55,9 @@ def _cleanup_loop(loop: asyncio.AbstractEventLoop) -> None:
     finally:
         logging.info('Closing the event loop.')
         loop.close()
+
+
+INTER_REGEX = re.compile(r'^([a-zA-Z0-9_]+)_([a-zA-Z0-9]+)$')
 
 
 class Client:
@@ -294,6 +298,15 @@ class Client:
                 if self.interaction_listener is not None:
                     asyncio.ensure_future(self.interaction_listener(interaction))
                 ac = self._interaction_handler.get(interaction.data.custom_id)
+                if ac is None:
+                    # check if var interaction exists
+                    match = INTER_REGEX.fullmatch(interaction.data.custom_id)
+                    if match is not None:
+                        # check if var interaction handler exists
+                        inter_name = match[0]
+                        var_name = match[1]
+                        interaction.custom_id_var = var_name
+                        ac = self._interaction_handler.get(inter_name + '_{var}')
                 if ac is None:
                     logging.exception(f'could not find handler for interaction with custom id {interaction.data.custom_id}')
                     return

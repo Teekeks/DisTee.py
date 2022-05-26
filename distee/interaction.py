@@ -68,6 +68,7 @@ class Interaction(Snowflake):
     
     def __init__(self, **data):
         super(Interaction, self).__init__(**data)
+        self.custom_id_var: Optional[str] = None
         self.application_id: Optional[Snowflake] = Snowflake(id=data.get('application_id'))
         self.type: InteractionType = InteractionType(data.get('type'))
         self.guild_id: Optional[Snowflake] = snowflake_or_none(data.get('guild_id'))
