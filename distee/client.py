@@ -57,7 +57,7 @@ def _cleanup_loop(loop: asyncio.AbstractEventLoop) -> None:
         loop.close()
 
 
-INTER_REGEX = re.compile(r'^([a-zA-Z0-9_]+)_([a-zA-Z0-9]+)$')
+INTER_REGEX = re.compile(r'^([a-zA-Z0-9_]+)_([a-zA-Z0-9|]+)$')
 
 
 class Client:
