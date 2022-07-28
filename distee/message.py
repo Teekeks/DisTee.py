@@ -1,5 +1,6 @@
 import typing
 
+from .enums import MessageType
 from .utils import Snowflake
 from typing import Optional, Union, List
 from .route import Route
@@ -23,7 +24,8 @@ class Message(Snowflake):
         'channel',
         'author',
         'embeds',
-        'components'
+        'components',
+        'type'
     ]
 
     def __init__(self, **args):
@@ -44,6 +46,7 @@ class Message(Snowflake):
             if self.guild is not None else None
         self.embeds: Optional[List] = args.get('embeds')
         self.components: Optional[List] = args.get('components')
+        self.type: MessageType = MessageType(args.get('type', 0))
         # FIXME implement all of the message object https://discord.com/developers/docs/resources/channel#message-object
 
     @property
