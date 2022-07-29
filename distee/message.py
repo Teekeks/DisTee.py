@@ -25,7 +25,11 @@ class Message(Snowflake):
         'author',
         'embeds',
         'components',
-        'type'
+        'type',
+        'tts',
+        'mention_everyone',
+        'nonce',
+        'webhook_id'
     ]
 
     def __init__(self, **args):
@@ -35,8 +39,8 @@ class Message(Snowflake):
         self.channel_id: Snowflake = Snowflake(id=args.get('channel_id'))
         self.author_id: Snowflake = Snowflake(id=args.get('author', {}).get('id'))
         self.pinned: bool = args.get('pinned')
+        # TODO: fix flags to use message flags
         self.flags = args.get('flags')
-
         self.guild: Optional[Guild] = self._client.get_guild(self.guild_id) if self._client is not None else None
         self.author: Optional[Union[User, Member]] = self.guild.get_member(self.author_id) \
             if self.guild is not None else None
@@ -47,6 +51,27 @@ class Message(Snowflake):
         self.embeds: Optional[List] = args.get('embeds')
         self.components: Optional[List] = args.get('components')
         self.type: MessageType = MessageType(args.get('type', 0))
+        # TODO implement timestamp
+        # TODO implement edited_timestamp
+        self.tts: bool = args.get('tts')
+        self.mention_everyone: bool = args.get('mention_everyone')
+        # TODO implement mentions
+        # TODO implement mention_roles
+        # TODO implement mention_channels
+        # TODO implement attachments
+        # TODO implement reactions
+        self.nonce: Optional[Union[int, str]] = args.get('nonce')
+        self.webhook_id: Optional[Snowflake] = Snowflake(id=args.get('webhook_id')) if args.get('webhook_id') is not None else None
+        # TODO implement activity
+        # TODO implement application
+        # TODO implement application_id
+        # TODO implement message_reference
+        # TODO implement referenced_message
+        # TODO implement interaction
+        # TODO implement thread
+        # TODO implement sticker_items
+        # TODO implement stickers
+        # TODO implement position
         # FIXME implement all of the message object https://discord.com/developers/docs/resources/channel#message-object
 
     @property
