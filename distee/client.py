@@ -2,12 +2,11 @@ import asyncio
 import logging
 import re
 import signal
-import typing
-from copy import deepcopy
-from typing import Callable, Awaitable, Optional, Union, List, TypedDict, Dict
+from typing import Callable, Awaitable, Optional, Union, List, Dict
 
 import aiohttp
 
+from .base_client import BaseClient
 from .gateway import DiscordWebSocket
 from .role import Role
 from .user import User
@@ -57,16 +56,11 @@ def _cleanup_loop(loop: asyncio.AbstractEventLoop) -> None:
         loop.close()
 
 
-INTER_REGEX = re.compile(r'^([a-zA-Z0-9_]+)_([a-zA-Z0-9|]+)$')
-
-
-class Client:
+class Client(BaseClient):
 
     ws: DiscordWebSocket = None
     shard_id: int = 0
     shard_count: int = 1
-    user: User = None
-    http: HTTPClient
     loop = None
     shutdown_handler = None
     _closed = False
@@ -76,20 +70,12 @@ class Client:
     _users: Dict[int, User] = {}
     activity = None
     presence_status: PresenceStatus = PresenceStatus.ONLINE
-    _default_command_preprocessors = []
     _member_update_replay = {}
     messages = []
     message_cache_size: int = 10
     build_user_cache: bool = True
-    _application_commands: Dict[int, ApplicationCommand] = {}
-    _interaction_handler: Dict[str, Callable] = {}
-    _autocomplete_handler: Dict[str, Callable] = {}
-    _command_registrar: List[Dict] = []
 
     gateway_listener = None
-    interaction_listener = None
-    command_listener = None
-    interaction_error_listener = None
 
     @property
     def guilds(self):
@@ -100,12 +86,11 @@ class Client:
         return self._users
 
     def __init__(self):
+        super().__init__()
         self.ws = None
         self.build_member_cache: bool = True
-        self.http = HTTPClient(self)
         self.loop = asyncio.get_event_loop()
         self.intents: Intents = None
-        self.application: Application = None
         self.register_raw_gateway_event_listener('READY', self._on_ready)
         self.register_raw_gateway_event_listener('GUILD_CREATE', self._on_guild_create)
         self.register_raw_gateway_event_listener('GUILD_DELETE', self._on_guild_delete)
@@ -127,13 +112,6 @@ class Client:
     def is_closed(self) -> bool:
         """Returns whether or not this client is closing down"""
         return self._closed
-
-    async def login(self, token):
-        data = await self.http.do_login(token)
-        if data is None:
-            raise ClientException('Failed to log in')
-        self.user = User(**data)
-        logging.debug(f'Logged in as user {self.user.username}#{self.user.discriminator}')
 
     async def update_activity(self, activity: Optional[dict]):
         self.activity = activity
@@ -278,78 +256,10 @@ class Client:
             asyncio.ensure_future(event(member))
         guild._members.pop(int(data['user']['id']), None)
 
-    async def _on_interaction_create(self, data: dict):
-        interaction = None
-        try:
-            interaction = Interaction(**data, _client=self)
-            _id = interaction.data.id
-            if interaction.type == InteractionType.APPLICATION_COMMAND:
-                ac = self._application_commands.get(_id)
-                if ac is None:
-                    logging.error(f'could not find callback for command {interaction.data.name} ({_id})')
-                    return
-                for dcpp in self._default_command_preprocessors:
-                    if not await dcpp(interaction):
-                        return
-                # FIXME use command specific preprocessor
-                if self.command_listener is not None:
-                    asyncio.ensure_future(self.command_listener(ac, interaction))
-                await ac.callback(interaction)
-            elif interaction.type in (InteractionType.MESSAGE_COMPONENT, InteractionType.MODAL_SUBMIT):
-                if self.interaction_listener is not None:
-                    asyncio.ensure_future(self.interaction_listener(interaction))
-                ac = self._interaction_handler.get(interaction.data.custom_id)
-                if ac is None:
-                    # check if var interaction exists
-                    match = INTER_REGEX.fullmatch(interaction.data.custom_id)
-                    if match is not None:
-                        interaction.custom_id_var = match[2]
-                        ac = self._interaction_handler.get(match[1] + '_{var}')
-                if ac is None:
-                    logging.exception(f'could not find handler for interaction with custom id {interaction.data.custom_id}')
-                    return
-                await ac(interaction)
-            elif interaction.type == InteractionType.APPLICATION_COMMAND_AUTOCOMPLETE:
-                ac = self._autocomplete_handler.get(interaction.data.name)
-                if ac is None:
-                    logging.error(f'could not find autocomplete handler for command {interaction.data.name} ({interaction.data.id}')
-                    return
-                await ac(interaction)
-        except Exception as e:
-            logging.exception('Exception while handling interaction:')
-            if self.interaction_error_listener is not None:
-                try:
-                    await self.interaction_error_listener(interaction, e)
-                except:
-                    logging.exception('Exception in interaction exception handler while handling a exception')
-
     async def _on_ready(self, data: dict):
         for g in data.get('guilds', []):
             self._guilds[int(g['id'])] = None
-        # register global commands
-        globals_to_override = []
-        for c in self._command_registrar:
-            if not c.get('global'):
-                continue
-            globals_to_override.append(c.get('ap'))
-
-        _remote = [ApplicationCommand(**d, _client=self) for d in await self.http.request(Route(
-            'GET', f'/applications/{self.application.id}/commands'))]
-        if not command_lists_equal(globals_to_override, _remote):
-            _remote = [
-                ApplicationCommand(**x, _client=self) for x in await self.http.request(Route(
-                    'PUT', f'/applications/{self.application.id}/commands'),
-                    json=[g.get_json_data() for g in globals_to_override])]
-        for ap in _remote:
-            callback = None
-            for c in self._command_registrar:
-                if not c.get('global'):
-                    continue
-                if c.get('ap').name == ap.name and c.get('ap').type == ap.type:
-                    callback = c.get('callback')
-                    break
-            ap.callback = callback
-            self._application_commands[ap.id] = ap
+        await self._register_global_commands()
         # call ready event
         for event in self._event_listener.get(Event.READY.value, []):
             await event()
@@ -540,33 +450,24 @@ class Client:
             return func
         return decorator
 
-    def interaction_handler(self,
-                            custom_id: Optional[str] = None):
-        def decorator(func):
-            self._interaction_handler[custom_id] = func
-            return func
-        return decorator
-
-    def autocomplete_handler(self,
-                             command_name: str):
-        def decorator(func):
-            self._autocomplete_handler[command_name] = func
-            return func
-        return decorator
-
 ########################################################################################################################
 # Fetcher
 ########################################################################################################################
 
-    async def fetch_user(self, uid: Union[Snowflake, int]) -> User:
-        data = await self.http.request(Route('GET', '/users/{user_id}', user_id=uid))
-        user = User(**data, _client=self)
-        if self.build_user_cache:
-            self.add_user_to_cache(user)
-        return user
-
     def get_guild(self, s: Union[Snowflake, int]) -> Optional[Guild]:
         return self._guilds.get(s.id if isinstance(s, Snowflake) else s)
+
+    async def fetch_user(self, uid: Union[Snowflake, int]) -> User:
+        usr = await super(Client, self).fetch_user(uid)
+        if self.build_user_cache:
+            self.add_user_to_cache(usr)
+        return usr
+
+    async def obtain_guild(self, s: Union[Snowflake, int]) -> Guild:
+        g = self.get_guild(s)
+        if g is None:
+            return await self.fetch_guild(s)
+        return g
 
     def get_user(self, s: Union[Snowflake, int]) -> Optional[User]:
         return self._users.get(s.id if isinstance(s, Snowflake) else s)
@@ -590,60 +491,4 @@ class Client:
             user = User(**user, _client=self)
         if self._users.get(user.id) is None:
             self._users[user.id] = user
-
-    async def fetch_bot_application_information(self) -> Application:
-        data = await self.http.request(Route('GET', '/oauth2/applications/@me'))
-        self.application = Application(**data, _client=self)
-        return self.application
-
-    async def fetch_global_application_commands(self) -> List[ApplicationCommand]:
-        data = await self.http.request(Route('GET', f'/applications/{self.application.id}/commands'))
-        return [ApplicationCommand(**d, _client=self) for d in data]
-
-    async def fetch_guild_application_commands(self, gid: int) -> List[ApplicationCommand]:
-        data = await self.http.request(Route('GET',
-                                             f'/applications/{self.application.id}/guilds/{gid}/commands',
-                                             guild_id=gid))
-        return [ApplicationCommand(**d, _client=self) for d in data]
-
-    async def fetch_guild(self, s: Union[Snowflake, int]) -> Guild:
-        data = await self.http.request(Route('GET', '/guilds/{guild_id}', guild_id=s))
-        return Guild(**data, _client=self)
-
-    async def obtain_guild(self, s: Union[Snowflake, int]) -> Guild:
-        g = self.get_guild(s)
-        if g is None:
-            return await self.fetch_guild(s)
-        return g
-
-########################################################################################################################
-# Command registration
-########################################################################################################################
-
-    def register_command(self,
-                         ap: ApplicationCommand,
-                         callback,
-                         is_global: bool,
-                         guild_filter: Union[int, None, List[int]],
-                         preprocessors: Optional[List[Callable[[Interaction], Awaitable[bool]]]] = None):
-        if is_global:
-            # register global command
-            self._command_registrar.append({
-                'ap': ap,
-                'callback': callback,
-                'global': True,
-                'prep': preprocessors
-            })
-        else:
-            # register internally for server specific
-            self._command_registrar.append({
-                'ap': ap,
-                'global': False,
-                'guild_filter': guild_filter,
-                'callback': callback,
-                'prep': preprocessors
-            })
-
-    def add_default_command_preprocessor(self, com):
-        self._default_command_preprocessors.append(com)
 

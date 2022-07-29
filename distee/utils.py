@@ -34,6 +34,7 @@ def command_lists_equal(local, remote) -> bool:
 def get_components(comps):
     return [x if isinstance(x, dict) else x.to_json() for x in comps] if comps is not None else None
 
+
 class Snowflake:
 
     __slots__ = [

@@ -13,7 +13,7 @@ from .route import Route
 
 if typing.TYPE_CHECKING:
     from .file import File
-    from .client import Client
+    from .base_client import BaseClient
     from .components import BaseComponent
 
 
@@ -46,8 +46,8 @@ class HTTPClient:
 
     request_listener = None
 
-    def __init__(self, client: 'Client', loop=None):
-        self.client: 'Client' = client
+    def __init__(self, client: 'BaseClient', loop=None):
+        self.client: 'BaseClient' = client
         self.loop = asyncio.get_event_loop() if loop is None else loop
         self.user_agent = 'DiscordBot (https://github.com/Teekeks/DisTee.py v{version})'.format(version=utils.VERSION)
         self.__session: Optional[ClientSession] = None
