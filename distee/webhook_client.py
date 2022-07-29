@@ -33,9 +33,9 @@ class WebhookClient(BaseClient):
 
     async def startup(self):
         logging.info('started up!')
-        await super().login(self.token)
-        await super().fetch_bot_application_information()
-        await super()._register_global_commands()
+        await self.login(self.token)
+        await self.fetch_bot_application_information()
+        await self._register_global_commands()
 
     def run(self, public_key: str, port: int, host: str, token: str):
         self.token: str = token
