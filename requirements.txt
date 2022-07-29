@@ -1,2 +1,2 @@
-aiohttp
+aiohttp[speedups]>=3.8
 pynacl
