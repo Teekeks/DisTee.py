@@ -102,6 +102,9 @@ class Client(BaseClient):
         self.register_raw_gateway_event_listener('GUILD_ROLE_UPDATE', self._on_guild_role_update)
         self.register_raw_gateway_event_listener('VOICE_STATE_UPDATE', self._on_voice_state_update)
         self.register_raw_gateway_event_listener('MESSAGE_CREATE', self._on_message)
+        self.register_raw_gateway_event_listener('MESSAGE_UPDATE', self._on_message_edit)
+        self.register_raw_gateway_event_listener('MESSAGE_DELETE', self._on_message_delete)
+        self.register_raw_gateway_event_listener('MESSAGE_DELETE_BULK', self._on_message_bulk_delete)
         self.register_raw_gateway_event_listener('INTERACTION_CREATE', self._on_interaction_create)
         self.register_raw_gateway_event_listener('CHANNEL_CREATE', self._on_guild_channel_create)
         self.register_raw_gateway_event_listener('CHANNEL_UPDATE', self._on_guild_channel_update)
@@ -209,6 +212,18 @@ class Client(BaseClient):
         events = self._event_listener.get(Event.MESSAGE_SEND.value, [])
         for event in events:
             asyncio.ensure_future(event(msg))
+
+    async def _on_message_edit(self, data: dict):
+        msg = Message(**data, _client=self)
+        old_msg = await self.message_cache.message_edited(msg)
+        for event in self._event_listener.get(Event.MESSAGE_EDITED.value, []):
+            asyncio.ensure_future(event(old_msg, msg))
+
+    async def _on_message_delete(self, data: dict):
+        pass
+
+    async def _on_message_bulk_delete(self, data: dict):
+        pass
 
     async def _on_guild_member_chunk(self, data: dict):
         guild = self.get_guild(int(data['guild_id']))

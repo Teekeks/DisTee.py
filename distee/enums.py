@@ -161,6 +161,7 @@ class Event(Enum):
     GUILD_ROLE_UPDATED = 'guild_role_updated'
 
     MESSAGE_SEND = 'message_send'
+    MESSAGE_EDITED = 'message_edited'
 
     CHANNEL_DELETE = 'channel_delete'
 
