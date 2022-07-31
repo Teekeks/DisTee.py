@@ -71,8 +71,6 @@ class Client(BaseClient):
     activity = None
     presence_status: PresenceStatus = PresenceStatus.ONLINE
     _member_update_replay = {}
-    messages = []
-    message_cache_size: int = 10
     build_user_cache: bool = True
 
     gateway_listener = None
@@ -206,8 +204,7 @@ class Client(BaseClient):
             self._users[usr.id] = usr
         msg = Message(**data, _client=self)
         # add to cache
-        if len(self.messages) < self.message_cache_size:
-            self.messages.append(msg)
+        await self.message_cache.message_added(msg)
         # call on_message event
         events = self._event_listener.get(Event.MESSAGE_SEND.value, [])
         for event in events:

@@ -4,6 +4,8 @@ from typing import Union, List, Optional, Callable, Awaitable, Dict
 
 from distee.application import Application
 from distee.application_command import ApplicationCommand
+from distee.cache import BaseMessageCache
+from distee.cache.message_cache import NoMessageCache
 from distee.enums import InteractionType
 from distee.errors import ClientException
 from distee.guild import Guild
@@ -34,6 +36,7 @@ class BaseClient:
     def __init__(self):
         self.http = HTTPClient(self)
         self.application: Application = None
+        self.message_cache: BaseMessageCache = NoMessageCache()
 
     async def login(self, token):
         data = await self.http.do_login(token)
