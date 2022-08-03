@@ -221,7 +221,7 @@ class Interaction(Snowflake):
                                               interaction_token=self.token),
                                         form=[{'name': 'payload_json', 'value': get_json_from_dict(json)}])
 
-    async def automod_options(self, choices: List[ApplicationCommandOptionChoice]):
+    async def autocomplete_options(self, choices: List[ApplicationCommandOptionChoice]):
         json = {
             'type': InteractionResponseType.APPLICATION_COMMAND_AUTOCOMPLETE_RESULT.value,
             'data': {
