@@ -220,7 +220,10 @@ class Client(BaseClient):
             asyncio.ensure_future(event(old_msg, msg))
 
     async def _on_message_delete(self, data: dict):
-        pass
+        msg_id = int(data['id'])
+        msg = await self.message_cache.message_deleted(msg_id)
+        for event in self._event_listener.get(Event.MESSAGE_DELETED.value, []):
+            asyncio.ensure_future((event(msg if msg is not None else msg_id)))
 
     async def _on_message_bulk_delete(self, data: dict):
         pass
