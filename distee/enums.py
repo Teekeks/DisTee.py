@@ -163,6 +163,7 @@ class Event(Enum):
     MESSAGE_SEND = 'message_send'
     MESSAGE_EDITED = 'message_edited'
     MESSAGE_DELETED = 'message_deleted'
+    MESSAGE_BULK_DELETED = 'message_bulk_deleted'
 
     CHANNEL_DELETE = 'channel_delete'
 

@@ -223,10 +223,16 @@ class Client(BaseClient):
         msg_id = int(data['id'])
         msg = await self.message_cache.message_deleted(msg_id)
         for event in self._event_listener.get(Event.MESSAGE_DELETED.value, []):
-            asyncio.ensure_future((event(msg if msg is not None else msg_id)))
+            asyncio.ensure_future(event(msg if msg is not None else msg_id))
 
     async def _on_message_bulk_delete(self, data: dict):
-        pass
+        msg_ids = [int(x) for x in data['ids']]
+        messages = []
+        for _id in msg_ids:
+            m = await self.message_cache.message_deleted(_id)
+            messages.append(m if m is not None else _id)
+        for event in self._event_listener.get(Event.MESSAGE_BULK_DELETED.value, []):
+            asyncio.ensure_future(event(messages))
 
     async def _on_guild_member_chunk(self, data: dict):
         guild = self.get_guild(int(data['guild_id']))
