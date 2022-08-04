@@ -1,5 +1,5 @@
 import json
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
     from .client import Client
@@ -54,6 +54,10 @@ class Snowflake:
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+
+def snowflake_id(s: Union[int, Snowflake]) -> int:
+    return s if isinstance(s, int) else s.id
 
 
 def snowflake_or_none(id):
