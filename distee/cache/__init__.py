@@ -42,6 +42,10 @@ class BaseGuildCache(ABC):
 class BaseMemberCache(ABC):
 
     @abstractmethod
+    async def guild_left(self, guild_id: Union[int, Snowflake]):
+        pass
+
+    @abstractmethod
     async def member_added(self, member: Member):
         pass
 

@@ -8,6 +8,9 @@ if TYPE_CHECKING:
 
 
 class NoMemberCache(BaseMemberCache):
+    async def guild_left(self, guild_id: Union[int, Snowflake]):
+        pass
+
     async def member_added(self, member: Member):
         pass
 
@@ -30,6 +33,9 @@ class RamMemberCache(BaseMemberCache):
     def _ensure_guild(self, gid: int):
         if self.cache.get(gid) is None:
             self.cache[gid] = {}
+
+    async def guild_left(self, guild_id: Union[int, Snowflake]):
+        self.cache.pop(snowflake_id(guild_id))
 
     async def member_added(self, member: Member):
         self._ensure_guild(member.guild.id)
