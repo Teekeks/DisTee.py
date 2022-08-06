@@ -104,8 +104,8 @@ class ApplicationCommandOption:
             return False
         if self.channel_types != other.channel_types:
             return False
-        for i in range(len(self.options)):
-            if self.options[i] != other.options[i]:
+        for o1, o2 in zip(self.options, other.options):
+            if o1 != o2:
                 return False
         if len(self.choices) != len(other.choices):
             return False
@@ -217,8 +217,8 @@ class ApplicationCommand(Snowflake):
             return False
         if len(self.options) != len(other.options):
             return False
-        for i in range(len(self.options)):
-            if self.options[i] != other.options[i]:
+        for o1, o2 in zip(self.options, other.options):
+            if o1 != o2:
                 return False
         if self.default_permission != other.default_permission:
             return False
