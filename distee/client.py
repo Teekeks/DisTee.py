@@ -136,7 +136,7 @@ class Client(BaseClient):
                 guild.voice_states.pop(usr_id, None)
             else:
                 # update existing
-                guild.voice_states[usr_id].from_data(**data)
+                guild.voice_states[usr_id].handle_update(**data)
 
     async def _on_guild_role_update(self, data: dict):
         guild = self.get_guild(int(data['guild_id']))

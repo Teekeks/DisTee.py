@@ -175,6 +175,11 @@ class VoiceState:
         self.self_video: bool = data.get('self_video')
         self.request_to_speak_timestamp: str = data.get('request_to_speak_timestamp')
 
+    def handle_update(self, **data):
+        self.channel_id = Snowflake(id=data.get('channel_id'))
+        self.self_mute = data.get('self_mute')
+        self.self_deaf = data.get('self_deaf')
+
 
 class Guild(Snowflake):
     
