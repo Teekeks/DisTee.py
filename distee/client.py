@@ -241,17 +241,10 @@ class Client(BaseClient):
     async def _play_guild_member_update(self, data: dict):
         try:
             guild = self.get_guild(int(data.get('guild_id')))
-            member = guild.get_member(int(data.get('user').get('id')))
             new_member = Member(**data, _client=self, _guild=guild)
-            # lets update the member
-            guild._members[new_member.id] = new_member
-            if member is not None:
-                events = self._event_listener.get(Event.MEMBER_UPDATED.value, [])
-                for event in events:
-                    asyncio.ensure_future(event(member, new_member))
-                pass
-            else:
-                logging.warning(f'skipped member update for {new_member.id} in {guild.id}: old member not cached')
+            old_member = await self.member_cache.member_updated(new_member)
+            for event in self._event_listener.get(Event.MEMBER_UPDATED.value, []):
+                asyncio.ensure_future(event(old_member, new_member))
         except:
             logging.exception('Exception while handling guild member update')
 
@@ -272,10 +265,11 @@ class Client(BaseClient):
 
     async def _on_guild_member_remove(self, data: dict):
         guild = self.get_guild(int(data['guild_id']))
-        member = guild.get_member(int(data['user']['id']))
+        # member = guild.get_member(int(data['user']['id']))
+        member = self.member_cache.member_removed(int(data['guild_id']), int(data['user']['id']))
         for event in self._event_listener.get(Event.MEMBER_REMOVED.value, []):
             asyncio.ensure_future(event(member))
-        guild._members.pop(int(data['user']['id']), None)
+        # guild._members.pop(int(data['user']['id']), None)
 
     async def _on_ready(self, data: dict):
         for g in data.get('guilds', []):
@@ -289,9 +283,7 @@ class Client(BaseClient):
         gid = int(data.get('guild_id'))
         guild = self.get_guild(gid)
         member = Member(**data, _client=self, _guild=guild)
-        guild._members[member.id] = member
-        if self.build_user_cache:
-            self.add_user_to_cache(data.get('user'))
+        await self.member_cache.member_added(member)
         for event in self._event_listener.get(Event.MEMBER_JOINED.value, []):
             await event(member)
 
@@ -338,6 +330,7 @@ class Client(BaseClient):
             for event in self._event_listener.get(Event.GUILD_LEFT.value, []):
                 await event(g)
             # remove from cache
+            await self.member_cache.guild_left(int(data.get('id')))
             self._guilds.pop(int(data.get('id')))
 
 ########################################################################################################################
