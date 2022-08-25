@@ -161,9 +161,6 @@ class VoiceState:
     def __init__(self, **data):
         self.guild: 'Guild' = data.get('_guild')
         self._client: 'Client' = data.get('_client')
-        self.from_data(**data)
-
-    def from_data(self, **data):
         self.channel_id: Snowflake = Snowflake(id=data.get('channel_id'))
         self.user_id: Snowflake = Snowflake(id=data.get('user_id'))
         self.session_id: str = data.get('session_id')
