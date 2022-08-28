@@ -11,22 +11,22 @@ if TYPE_CHECKING:
 class BaseMessageCache(ABC):
 
     @abstractmethod
-    async def message_added(self, message: Message):
+    async def message_added(self, message: 'Message'):
         """Called when a message got added"""
         pass
 
     @abstractmethod
-    async def message_deleted(self, msg_id: Union[int, Snowflake]) -> Optional[Message]:
+    async def message_deleted(self, msg_id: Union[int, Snowflake]) -> Optional['Message']:
         """Called when a message got deleted, returns the deleted message if still in cache"""
         pass
 
     @abstractmethod
-    async def message_edited(self, message: Message) -> Optional[Message]:
+    async def message_edited(self, message: 'Message') -> Optional['Message']:
         """Called when a message got edited, returns the pre edit message if in cache"""
         pass
 
     @abstractmethod
-    async def get_message(self, msg_id: Union[int, Snowflake]) -> Optional[Message]:
+    async def get_message(self, msg_id: Union[int, Snowflake]) -> Optional['Message']:
         """Call this to get a message from the cache"""
         pass
 
@@ -34,7 +34,7 @@ class BaseMessageCache(ABC):
 class BaseGuildCache(ABC):
 
     @abstractmethod
-    async def get_guild(self, guild_id: Union[int, Snowflake]) -> Optional[Guild]:
+    async def get_guild(self, guild_id: Union[int, 'Snowflake']) -> Optional['Guild']:
         """Call this to get a guild from the cache"""
         pass
 
@@ -42,21 +42,21 @@ class BaseGuildCache(ABC):
 class BaseMemberCache(ABC):
 
     @abstractmethod
-    async def guild_left(self, guild_id: Union[int, Snowflake]):
+    async def guild_left(self, guild_id: Union[int, 'Snowflake']):
         pass
 
     @abstractmethod
-    async def member_added(self, member: Member):
+    async def member_added(self, member: 'Member'):
         pass
 
     @abstractmethod
-    async def member_updated(self, member: Member) -> Optional[Member]:
+    async def member_updated(self, member: 'Member') -> Optional['Member']:
         pass
 
     @abstractmethod
-    async def member_removed(self, guild_id: Union[int, Snowflake], member_id: Union[int, Snowflake]) -> Optional[Member]:
+    async def member_removed(self, guild_id: Union[int, 'Snowflake'], member_id: Union[int, 'Snowflake']) -> Optional['Member']:
         pass
 
     @abstractmethod
-    async def get_member(self, guild_id: Union[int, Snowflake], member_id: Union[int, Snowflake]) -> Optional[Member]:
+    async def get_member(self, guild_id: Union[int, 'Snowflake'], member_id: Union[int, 'Snowflake']) -> Optional['Member']:
         pass
