@@ -1,26 +1,26 @@
 from typing import Union, Optional, TYPE_CHECKING
 from distee.utils import snowflake_id
+from distee.cache import BaseMemberCache
 
 if TYPE_CHECKING:
-    from distee.cache import BaseMemberCache
     from distee.guild import Member
     from distee.utils import Snowflake
 
 
 class NoMemberCache(BaseMemberCache):
-    async def guild_left(self, guild_id: Union[int, Snowflake]):
+    async def guild_left(self, guild_id: Union[int, 'Snowflake']):
         pass
 
-    async def member_added(self, member: Member):
+    async def member_added(self, member: 'Member'):
         pass
 
-    async def member_updated(self, member: Member) -> Optional[Member]:
+    async def member_updated(self, member: 'Member') -> Optional['Member']:
         return None
 
-    async def member_removed(self, guild_id: Union[int, Snowflake], member_id: Union[int, Snowflake]) -> Optional[Member]:
+    async def member_removed(self, guild_id: Union[int, 'Snowflake'], member_id: Union[int, 'Snowflake']) -> Optional['Member']:
         return None
 
-    async def get_member(self, guild_id: Union[int, Snowflake], member_id: Union[int, Snowflake]) -> Optional[Member]:
+    async def get_member(self, guild_id: Union[int, 'Snowflake'], member_id: Union[int, 'Snowflake']) -> Optional['Member']:
         return None
 
 
@@ -34,27 +34,27 @@ class RamMemberCache(BaseMemberCache):
         if self.cache.get(gid) is None:
             self.cache[gid] = {}
 
-    async def guild_left(self, guild_id: Union[int, Snowflake]):
+    async def guild_left(self, guild_id: Union[int, 'Snowflake']):
         self.cache.pop(snowflake_id(guild_id))
 
-    async def member_added(self, member: Member):
+    async def member_added(self, member: 'Member'):
         self._ensure_guild(member.guild.id)
         self.cache[member.guild.id][member.id] = member
 
-    async def member_updated(self, member: Member) -> Optional[Member]:
+    async def member_updated(self, member: 'Member') -> Optional['Member']:
         self._ensure_guild(member.guild.id)
         before = self.cache[member.guild.id].get(member.id)
         self.cache[member.guild.id][member.id] = member
         return before
 
-    async def member_removed(self, guild_id: Union[int, Snowflake], member_id: Union[int, Snowflake]) -> Optional[Member]:
+    async def member_removed(self, guild_id: Union[int, 'Snowflake'], member_id: Union[int, 'Snowflake']) -> Optional['Member']:
         gid = snowflake_id(guild_id)
         if self.cache.get(gid) is None:
             return None
         mid = snowflake_id(member_id)
         return self.cache[gid].pop(mid, None)
 
-    async def get_member(self, guild_id: Union[int, Snowflake], member_id: Union[int, Snowflake]) -> Optional[Member]:
+    async def get_member(self, guild_id: Union[int, 'Snowflake'], member_id: Union[int, 'Snowflake']) -> Optional['Member']:
         gid = snowflake_id(guild_id)
         if self.cache.get(gid) is None:
             return None
