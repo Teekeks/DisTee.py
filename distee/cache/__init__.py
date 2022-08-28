@@ -16,7 +16,7 @@ class BaseMessageCache(ABC):
         pass
 
     @abstractmethod
-    async def message_deleted(self, msg_id: Union[int, Snowflake]) -> Optional['Message']:
+    async def message_deleted(self, msg_id: Union[int, 'Snowflake']) -> Optional['Message']:
         """Called when a message got deleted, returns the deleted message if still in cache"""
         pass
 
@@ -26,7 +26,7 @@ class BaseMessageCache(ABC):
         pass
 
     @abstractmethod
-    async def get_message(self, msg_id: Union[int, Snowflake]) -> Optional['Message']:
+    async def get_message(self, msg_id: Union[int, 'Snowflake']) -> Optional['Message']:
         """Call this to get a message from the cache"""
         pass
 
