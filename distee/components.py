@@ -1,6 +1,7 @@
 from typing import List, Optional, Dict
 
-from .enums import ComponentType, ButtonStyle, TextInputType
+from .enums import ComponentType, ButtonStyle, TextInputType, ChannelType
+
 
 ########################################################################################################################
 # BASE
@@ -116,15 +117,43 @@ class SelectOption:
         return b
 
 
-class SelectMenu(CustomIDComponent):
+class BaseSelectMenu(CustomIDComponent):
 
     __slots__ = [
-        'options',
         'disabled',
         'placeholder',
         'min_values',
         'max_values'
     ]
+
+    def __init__(self,
+                 _type: ComponentType,
+                 custom_id: str,
+                 disabled: bool = False,
+                 placeholder: str = None,
+                 min_values: int = None,
+                 max_values: int = None):
+        super(BaseSelectMenu, self).__init__(_type, custom_id)
+        self.disabled = disabled
+        self.placeholder = placeholder
+        self.min_values = min_values
+        self.max_values = max_values
+
+    def to_json(self):
+        b = super(BaseSelectMenu, self).to_json()
+        b['disabled'] = self.disabled
+        if self.placeholder is not None:
+            b['placeholder'] = self.placeholder
+        if self.min_values is not None:
+            b['min_values'] = self.min_values
+        if self.max_values is not None:
+            b['max_values'] = self.max_values
+        return b
+
+
+class SelectMenu(BaseSelectMenu):
+
+    __slots__ = ['options']
 
     def __init__(self,
                  custom_id: str,
@@ -133,23 +162,66 @@ class SelectMenu(CustomIDComponent):
                  placeholder: str = None,
                  min_values: int = None,
                  max_values: int = None):
-        super(SelectMenu, self).__init__(ComponentType.SELECT_MENU, custom_id)
+        super(SelectMenu, self).__init__(ComponentType.SELECT_MENU, custom_id, disabled, placeholder, min_values, max_values)
         self.options = options
-        self.disabled = disabled
-        self.placeholder = placeholder
-        self.min_values = min_values
-        self.max_values = max_values
 
     def to_json(self):
         b = super(SelectMenu, self).to_json()
         b['options'] = [a.to_json() for a in self.options]
-        b['disabled'] = self.disabled
-        if self.placeholder is not None:
-            b['placeholder'] = self.placeholder
-        if self.min_values is not None:
-            b['min_values'] = self.min_values
-        if self.max_values is not None:
-            b['max_values'] = self.max_values
+        return b
+
+
+class UserSelectMenu(BaseSelectMenu):
+
+    def __init__(self,
+                 custom_id: str,
+                 disabled: bool = False,
+                 placeholder: str = None,
+                 min_values: int = None,
+                 max_values: int = None):
+        super(UserSelectMenu, self).__init__(ComponentType.USER_SELECT, custom_id, disabled, placeholder, min_values, max_values)
+
+
+class RoleSelectMenu(BaseSelectMenu):
+
+    def __init__(self,
+                 custom_id: str,
+                 disabled: bool = False,
+                 placeholder: str = None,
+                 min_values: int = None,
+                 max_values: int = None):
+        super(RoleSelectMenu, self).__init__(ComponentType.ROLE_SELECT, custom_id, disabled, placeholder, min_values, max_values)
+
+
+class MentionableSelectMenu(BaseSelectMenu):
+
+    def __init__(self,
+                 custom_id: str,
+                 disabled: bool = False,
+                 placeholder: str = None,
+                 min_values: int = None,
+                 max_values: int = None):
+        super(MentionableSelectMenu, self).__init__(ComponentType.MENTIONABLE_SELECT, custom_id, disabled, placeholder, min_values, max_values)
+
+
+class ChannelSelectMenu(BaseSelectMenu):
+
+    __slots__ = ['channel_types']
+
+    def __init__(self,
+                 custom_id: str,
+                 disabled: bool = False,
+                 placeholder: str = None,
+                 min_values: int = None,
+                 max_values: int = None,
+                 channel_types: Optional[List[ChannelType]] = None):
+        super(ChannelSelectMenu, self).__init__(ComponentType.CHANNEL_SELECT, custom_id, disabled, placeholder, min_values, max_values)
+        self.channel_types = channel_types
+
+    def to_json(self):
+        b = super(ChannelSelectMenu, self).to_json()
+        if self.channel_types is not None:
+            b['channel_types'] = [a.value for a in self.channel_types]
         return b
 
 
