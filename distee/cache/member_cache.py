@@ -1,4 +1,4 @@
-from typing import Union, Optional, TYPE_CHECKING
+from typing import Union, Optional, TYPE_CHECKING, List
 from distee.utils import snowflake_id
 from distee.cache import BaseMemberCache
 
@@ -8,6 +8,9 @@ if TYPE_CHECKING:
 
 
 class NoMemberCache(BaseMemberCache):
+    async def get_guild_members(self, guild_id: Union[int, 'Snowflake']) -> List['Member']:
+        return []
+
     async def guild_left(self, guild_id: Union[int, 'Snowflake']):
         pass
 
@@ -26,6 +29,9 @@ class NoMemberCache(BaseMemberCache):
 
 class RamMemberCache(BaseMemberCache):
     """Strategy: keep all members of a guild cached till they are removed from said guild"""
+
+    async def get_guild_members(self, guild_id: Union[int, 'Snowflake']) -> List['Member']:
+        return self.cache.get(snowflake_id(guild_id), [])
 
     def __init__(self):
         self.cache = {}

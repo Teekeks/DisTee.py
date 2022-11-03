@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional, Union, TYPE_CHECKING
-
+from typing import Optional, Union, TYPE_CHECKING, List
 
 if TYPE_CHECKING:
     from distee.guild import Guild, Member
@@ -59,4 +58,8 @@ class BaseMemberCache(ABC):
 
     @abstractmethod
     async def get_member(self, guild_id: Union[int, 'Snowflake'], member_id: Union[int, 'Snowflake']) -> Optional['Member']:
+        pass
+
+    @abstractmethod
+    async def get_guild_members(self, guild_id: Union[int, 'Snowflake']) -> List['Member']:
         pass

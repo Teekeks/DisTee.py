@@ -1,8 +1,9 @@
 import json
 from typing import TYPE_CHECKING, Union
 
+
 if TYPE_CHECKING:
-    from .client import Client
+    from .base_client import BaseClient
 
 VERSION = 'indef'
 GATEWAY_VERSION = 10
@@ -44,7 +45,7 @@ class Snowflake:
 
     def __init__(self, **args):
         self.id: int = int(args.get('id')) if args.get('id') is not None else None
-        self._client: Client = args.get('_client')
+        self._client: BaseClient = args.get('_client')
 
     def __eq__(self, other):
         if isinstance(other, Snowflake):

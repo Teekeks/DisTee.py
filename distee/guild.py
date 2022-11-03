@@ -245,17 +245,9 @@ class Guild(Snowflake):
         self.nsfw_level: GuildNSFWLevel = GuildNSFWLevel(kwargs.get('nsfw_level'))
         self.stage_instances = []  # FIXME parse stage instances
         self.stickers = []  # FIXME parse stickers
-        self._members: Dict[int, Member] = {}
-        for m_d in kwargs.get('members', []):
-            m = Member(**m_d, _client=self._client, _guild=self)
-            self._members[m.id] = m
-            if self._client is not None:
-                if self._client.build_user_cache:
-                    self._client.add_user_to_cache(m_d.get('user'))
 
-    @property
-    def members(self) -> Dict[int, Member]:
-        return self._members
+    async def members(self):
+        return await self._client.member_cache.get_guild_members(self.id)
 
     async def handle_channel_create(self, data: dict):
         channel = get_channel(**data, _client=self._client, _guild=self)
@@ -271,9 +263,10 @@ class Guild(Snowflake):
     async def handle_member_chunk(self, data: dict):
         for m_data in data['members']:
             m = Member(**m_data, _client=self._client, _guild=self)
-            self._members[m.id] = m
+            await self._client.member_cache.member_added(m)
+
         if data['chunk_index'] == (data['chunk_count'] - 1):
-            logging.info(f'filled member cache for guild {self.id}: got {len(self._members.keys())} members')
+            logging.info(f'filled member cache for guild {self.id}: got {len(await self._client.member_cache.get_guild_members(self.id))} members')
 
     def handle_guild_update(self, **kwargs):
         self.name = kwargs.get('name')
@@ -327,8 +320,8 @@ class Guild(Snowflake):
         """Get Channel Object from cache if found, otherwise returns None"""
         return self._channels.get(channel_id.id if isinstance(channel_id, Snowflake) else channel_id)
 
-    def get_member(self, member_id: Union[Snowflake, int]) -> Optional[Member]:
-        return self._members.get(member_id.id if isinstance(member_id, Snowflake) else member_id)
+    async def get_member(self, member_id: Union[Snowflake, int]) -> Optional[Member]:
+        return await self._client.member_cache.get_member(self.id, member_id)
 
     async def fetch_member(self, member_id: Union[Snowflake, int]) -> Member:
         data = await self._client.http.request(Route('GET',
@@ -337,12 +330,12 @@ class Guild(Snowflake):
                                                      member_id=member_id))
         member = Member(**data, _client=self._client, _guild=self)
         # override cache
-        self._members[member.id] = member
+        await self._client.member_cache.member_updated(member)
         return member
 
     async def obtain_member(self, member_id: Union[Snowflake, int]) -> Member:
         """Either get from cache or fetch if not in cache"""
-        m = self.get_member(member_id)
+        m = await self.get_member(member_id)
         if m is None:
             return await self.fetch_member(member_id)
         return m
@@ -356,5 +349,5 @@ class Guild(Snowflake):
     async def leave_guild(self):
         await self._client.http.request(Route('DELETE', '/users/@me/guilds/{guild_id}', guild_id=self.id))
 
-    def get_self(self) -> Member:
-        return self._members[self._client.user.id]
+    async def get_self(self) -> Member:
+        return await self._client.member_cache.get_member(self.id, self._client.user.id)

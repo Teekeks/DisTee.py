@@ -264,12 +264,9 @@ class Client(BaseClient):
         pass
 
     async def _on_guild_member_remove(self, data: dict):
-        guild = self.get_guild(int(data['guild_id']))
-        # member = guild.get_member(int(data['user']['id']))
         member = self.member_cache.member_removed(int(data['guild_id']), int(data['user']['id']))
         for event in self._event_listener.get(Event.MEMBER_REMOVED.value, []):
             asyncio.ensure_future(event(member))
-        # guild._members.pop(int(data['user']['id']), None)
 
     async def _on_ready(self, data: dict):
         for g in data.get('guilds', []):
@@ -296,10 +293,7 @@ class Client(BaseClient):
             for d in dat:
                 asyncio.ensure_future(self._play_guild_member_update(d))
         if self.build_member_cache:
-            if len(g.members.keys()) < g.member_count:
-                await self.ws.request_guild_members(g.id)
-            else:
-                logging.info(f'member cache for {g.id} was already filled, got {len(g.members.keys())}')
+            await self.ws.request_guild_members(g.id)
         # register server specific commands on join
         await self._register_guild_commands(g.id)
         if is_new:
