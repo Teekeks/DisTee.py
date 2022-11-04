@@ -3,7 +3,7 @@ import logging
 import typing
 
 from .route import Route
-from .utils import Snowflake
+from .utils import Snowflake, snowflake_id
 from typing import Optional, List, Dict, Union
 from .enums import GuildVerificationLevel, MessageNotificationLevel, ExplicitContentFilterLevel, MFALevel, PremiumTier
 from .enums import GuildNSFWLevel
@@ -13,7 +13,7 @@ from .user import User
 from .role import Role
 
 if typing.TYPE_CHECKING:
-    from .channel import GuildChannel, TextChannel, VoiceChannel, Category
+    from .channel import GuildChannel, TextChannel, VoiceChannel, Category, Thread
     from .client import Client
 
 
@@ -222,7 +222,10 @@ class Guild(Snowflake):
         for cd in kwargs.get('channels', []):
             c = get_channel(**cd, _client=self._client, guild_id=self.id)
             self._channels[c.id] = c
-        self.threads = []  # FIXME parse threads
+        self.threads: Dict[int, 'Thead'] = {}
+        for cd in kwargs.get('threads', []):
+            c = get_channel(**cd, _client=self._client, guild_id=self.id)
+            self.threads[c.id] = c
         # FIXME parse presences
         self.voice_states: Dict[int, VoiceState] = {
             int(d.get('user_id')): VoiceState(**d, _client=self._client, _guild=self)
@@ -248,6 +251,17 @@ class Guild(Snowflake):
 
     async def members(self):
         return await self._client.member_cache.get_guild_members(self.id)
+
+    async def handle_thread_create_event(self, data: dict):
+        ch = get_channel(**data, _client=self._client, _guild=self)
+        self.threads[ch.id] = ch
+
+    async def handle_thread_update_event(self, data: dict):
+        ch = get_channel(**data, _client=self._client, _guild=self)
+        self.threads[ch.id] = ch
+
+    async def handle_thread_delete_event(self, data: dict):
+        self.threads.pop(int(data['id']))
 
     async def handle_channel_create(self, data: dict):
         channel = get_channel(**data, _client=self._client, _guild=self)
@@ -316,9 +330,12 @@ class Guild(Snowflake):
         self.nsfw_level: GuildNSFWLevel = GuildNSFWLevel(kwargs.get('nsfw_level'))
         self.stickers = []  # FIXME parse stickers
 
-    def get_channel(self, channel_id: Union[Snowflake, int]) -> Optional[Union['GuildChannel', 'TextChannel', 'VoiceChannel', 'Category']]:
+    def get_channel(self, channel_id: Union[Snowflake, int]) -> Optional[Union['GuildChannel', 'TextChannel', 'VoiceChannel', 'Category', 'Thread']]:
         """Get Channel Object from cache if found, otherwise returns None"""
-        return self._channels.get(channel_id.id if isinstance(channel_id, Snowflake) else channel_id)
+        ch = self._channels.get(snowflake_id(channel_id))
+        if ch is None:
+            ch = self.threads.get(snowflake_id(channel_id))
+        return ch
 
     async def get_member(self, member_id: Union[Snowflake, int]) -> Optional[Member]:
         return await self._client.member_cache.get_member(self.id, member_id)

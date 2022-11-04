@@ -4,7 +4,7 @@ import typing
 
 from . import abc
 from .flags import Permissions
-from .utils import Snowflake
+from .utils import Snowflake, snowflake_id
 from .enums import ChannelType
 from typing import Optional, List, Union, Dict
 from .route import Route
@@ -92,6 +92,11 @@ class GuildChannel(BaseChannel):
             perms |= overwrite_member.allow
         return perms
 
+class ForumChannel(GuildChannel):
+    
+    def __init__(self, **data):
+        super(ForumChannel, self).__init__(**data)
+
 
 class Category(GuildChannel):
     
@@ -142,6 +147,37 @@ class TextChannel(GuildChannel, MessageableChannel):
         self.topic = new_topic
 
 
+class Thread(GuildChannel, MessageableChannel):
+
+    __slots__ = [
+        'owner_id',
+        'last_message_id',
+        'member_count',
+        'message_count',
+        'total_message_sent',
+        'archived',
+        'auto_archive_duration',
+        'archive_timestamp',
+        'locked',
+        'invitable',
+        'create_timestamp'
+    ]
+
+    def __init__(self, **data):
+        super(Thread, self).__init__(**data)
+        self.owner_id: int = int(data.get('owner_id'))
+        self.last_message_id: int = int(data.get('last_message_id'))
+        self.member_count: int = data.get('member_count')
+        self.message_count: int = data.get('message_count')
+        self.total_message_sent: int = data.get('total_message_sent')
+        self.archived: bool = data['thread_metadata'].get('archived')
+        self.auto_archive_duration: int = data['thread_metadata'].get('auto_archive_duration')
+        # TODO add archive_timestamp
+        # TODO add invitable
+        # TODO add create_timestamp
+        self.locked: bool = data['thread_metadata'].get('locked')
+
+
 class VoiceChannel(TextChannel):
 
     __slots__ = [
@@ -179,9 +215,10 @@ def get_channel(**data):
         return VoiceChannel(**data)
     if t == ChannelType.GUILD_STORE:
         return GuildChannel(**data)
-    # FIXME: make this proper
     if t == ChannelType.GUILD_FORUM:
-        return GuildChannel(**data)
+        return ForumChannel(**data)
+    if t in (ChannelType.GUILD_PUBLIC_THREAD, ChannelType.GUILD_PRIVATE_THREAD, ChannelType.GUILD_NEWS_THREAD):
+        return Thread(**data)
     if t == ChannelType.GUILD_DIRECTORY:
         return GuildChannel(**data)
     if t == ChannelType.DM:

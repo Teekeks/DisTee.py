@@ -109,6 +109,10 @@ class Client(BaseClient):
         self.register_raw_gateway_event_listener('CHANNEL_CREATE', self._on_guild_channel_create)
         self.register_raw_gateway_event_listener('CHANNEL_UPDATE', self._on_guild_channel_update)
         self.register_raw_gateway_event_listener('CHANNEL_DELETE', self._on_guild_channel_delete)
+        self.register_raw_gateway_event_listener('THREAD_CREATE', self._on_thread_create)
+        self.register_raw_gateway_event_listener('THREAD_UPDATE', self._on_thread_update)
+        self.register_raw_gateway_event_listener('THREAD_DELETE', self._on_thread_delete)
+        self.register_raw_gateway_event_listener('THREAD_LIST_SYNC', self._on_thread_list_sync)
 
     def is_closed(self) -> bool:
         """Returns whether or not this client is closing down"""
@@ -121,6 +125,30 @@ class Client(BaseClient):
 ########################################################################################################################
 # EVENT HOOKS
 ########################################################################################################################
+
+    async def _on_thread_create(self, data: dict):
+        guild = self.get_guild(int(data['guild_id']))
+        if guild is None:
+            logging.warning(f'skipped channel create event: guild {int(data["guild_id"])} not present')
+            return
+        await guild.handle_thread_create_event(data)
+
+    async def _on_thread_update(self, data: dict):
+        guild = self.get_guild(int(data['guild_id']))
+        if guild is None:
+            logging.warning(f'skipped channel create event: guild {int(data["guild_id"])} not present')
+            return
+        await guild.handle_thread_update_event(data)
+
+    async def _on_thread_delete(self, data: dict):
+        guild = self.get_guild(int(data['guild_id']))
+        if guild is None:
+            logging.warning(f'skipped channel create event: guild {int(data["guild_id"])} not present')
+            return
+        await guild.handle_thread_delete_event(data)
+
+    async def _on_thread_list_sync(self, data: dict):
+        pass
 
     async def _on_voice_state_update(self, data: dict):
         guild = self.get_guild(int(data.get('guild_id')))
