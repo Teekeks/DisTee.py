@@ -166,7 +166,7 @@ class Thread(GuildChannel, MessageableChannel):
     def __init__(self, **data):
         super(Thread, self).__init__(**data)
         self.owner_id: int = int(data.get('owner_id'))
-        self.last_message_id: int = int(data.get('last_message_id'))
+        self.last_message_id: Optional[int] = int(data.get('last_message_id')) if data.get('last_message_id') is not None else None
         self.member_count: int = data.get('member_count')
         self.message_count: int = data.get('message_count')
         self.total_message_sent: int = data.get('total_message_sent')
