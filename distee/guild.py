@@ -224,7 +224,9 @@ class Guild(Snowflake):
             self._channels[c.id] = c
         self.threads: Dict[int, 'Thead'] = {}
         for cd in kwargs.get('threads', []):
-            c = get_channel(**cd, _client=self._client, guild_id=self.id)
+            if cd.get('guild_id') is None:
+                cd['guild_id'] = self.id
+            c = get_channel(**cd, _client=self._client)
             self.threads[c.id] = c
         # FIXME parse presences
         self.voice_states: Dict[int, VoiceState] = {
