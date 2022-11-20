@@ -22,7 +22,6 @@ class Message(Snowflake):
         'flags',
         'guild',
         'channel',
-        'author',
         'embeds',
         'components',
         'type',
