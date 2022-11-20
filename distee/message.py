@@ -42,10 +42,6 @@ class Message(Snowflake):
         # TODO: fix flags to use message flags
         self.flags = args.get('flags')
         self.guild: Optional[Guild] = self._client.get_guild(self.guild_id) if self._client is not None else None
-        self.author: Optional[Union[User, Member]] = self.guild.get_member(self.author_id) \
-            if self.guild is not None else None
-        if self.author is None and self._client is not None:
-            self.author = self._client.get_user(self.author_id)
         self.channel: Optional[TextChannel] = self.guild.get_channel(self.channel_id) \
             if self.guild is not None else None
         self.embeds: Optional[List] = args.get('embeds')
@@ -73,6 +69,9 @@ class Message(Snowflake):
         # TODO implement stickers
         # TODO implement position
         # FIXME implement all of the message object https://discord.com/developers/docs/resources/channel#message-object
+
+    async def author(self):
+        return await self.guild.get_member(self.author_id) if self.guild is not None else self._client.get_user(self.author_id)
 
     @property
     def jump_url(self):
