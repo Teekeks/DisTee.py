@@ -10,6 +10,7 @@ import aiohttp
 from aiohttp import ClientWebSocketResponse
 from concurrent import futures
 from .errors import WebSocketClosure, ReconnectWebSocket, ConnectionClosed
+from platform import platform
 
 
 class HeartbeatThread(threading.Thread):
@@ -251,9 +252,9 @@ class DiscordWebSocket:
                 'shard': [self.client.shard_id, self.client.shard_count],
                 'intents': self.client.intents.value,
                 'properties': {
-                    '$os': '',
-                    '$browser': f'DisTee.py v{utils.VERSION}',
-                    '$device': f'DisTee.py v{utils.VERSION}'
+                    'os': platform(),
+                    'browser': f'DisTee.py v{utils.VERSION}',
+                    'device': f'DisTee.py v{utils.VERSION}'
                 },
                 'presence': {
                     'status': self.client.presence_status.value
