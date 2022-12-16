@@ -305,10 +305,8 @@ class DiscordWebSocket:
         self._close_code = None
         self._zlib = zlib.decompressobj()
         self._buffer = bytearray()
-        if resume:
-            gateway = await self.client.http.get_gateway() if self.gateway_url is None else self.gateway_url
-        else:
-            gateway = await self.client.http.get_gateway()
+        gateway = await self.client.http.get_gateway(resume, self.gateway_url)
+        logging.debug(f'connecting to gateway {gateway}')
         self.socket = await self.client.http.ws_connect(gateway)
         self.token = self.client.http.token
 

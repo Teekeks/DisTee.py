@@ -71,15 +71,19 @@ class HTTPClient:
         return data
     pass
 
-    async def get_gateway(self, encoding: str = 'json', zlib: bool = True) -> str:
-        try:
-            data = await self.request(Route('GET', '/gateway'))
-        except HTTPException as ex:
-            raise GatewayNotFound from ex
-        if zlib:
-            return f'{data["url"]}?encoding={encoding}&v={utils.GATEWAY_VERSION}&compress=zlib-stream'
+    async def get_gateway(self, resume: bool, resume_gateway: str = None, encoding: str = 'json', zlib: bool = True) -> str:
+        if resume and resume_gateway is not None:
+            url = resume_gateway
         else:
-            return f'{data["url"]}?encoding={encoding}&v={utils.GATEWAY_VERSION}'
+            try:
+                data = await self.request(Route('GET', '/gateway'))
+                url = data['url']
+            except HTTPException as ex:
+                raise GatewayNotFound from ex
+        if zlib:
+            return f'{url}?encoding={encoding}&v={utils.GATEWAY_VERSION}&compress=zlib-stream'
+        else:
+            return f'{url}?encoding={encoding}&v={utils.GATEWAY_VERSION}'
 
     async def ws_connect(self, url: str):
         return await self.__session.ws_connect(url, timeout=30)
