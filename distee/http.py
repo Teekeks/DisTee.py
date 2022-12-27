@@ -233,7 +233,7 @@ class HTTPClient:
                             message_reference: Optional[Dict] = None,
                             stickers: Optional[List] = None,
                             components: Optional[List[Union[dict, 'BaseComponent']]] = None,
-                            flags: Optional[int] = None) -> 'Thread':
+                            flags: Optional[int] = None) -> ('Thread', 'Message'):
         if files is not None:
             return await self.create_thread_multipart(route,
                                                       name=name,
@@ -278,7 +278,9 @@ class HTTPClient:
         if applied_tags is not None:
             payload['applied_tags'] = applied_tags
         d = await self.request(route, json=payload)
-        return get_channel(**d, _client=self.client)
+        thread = get_channel(**d, _client=self.client)
+        message = Message(**d['message'], _client=self.client)
+        return thread, message
 
     async def create_thread_multipart(self,
                                       route: Route,

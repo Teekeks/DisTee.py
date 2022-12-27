@@ -139,20 +139,20 @@ class ForumChannel(GuildChannel):
                                  flags: Optional[int] = None,
                                  applied_tags: Optional[List[int]] = None,
                                  auto_archive_duration: Optional[int] = None,
-                                 rate_limit_per_user: Optional[int] = None) -> 'Thread':
-        t = await self._client.http.create_thread(Route('POST', '/channels/{channel_id}/threads', channel_id=self.id),
-                                                  name=name,
-                                                  content=content,
-                                                  embeds=embeds,
-                                                  allowed_mentions=allowed_mentions,
-                                                  components=components,
-                                                  stickers=sticker_ids,
-                                                  files=files,
-                                                  flags=flags,
-                                                  applied_tags=applied_tags,
-                                                  auto_archive_duration=auto_archive_duration,
-                                                  rate_limit_per_user=rate_limit_per_user)
-        return t
+                                 rate_limit_per_user: Optional[int] = None) -> ('Thread', 'Message'):
+        t, m = await self._client.http.create_thread(Route('POST', '/channels/{channel_id}/threads', channel_id=self.id),
+                                                     name=name,
+                                                     content=content,
+                                                     embeds=embeds,
+                                                     allowed_mentions=allowed_mentions,
+                                                     components=components,
+                                                     stickers=sticker_ids,
+                                                     files=files,
+                                                     flags=flags,
+                                                     applied_tags=applied_tags,
+                                                     auto_archive_duration=auto_archive_duration,
+                                                     rate_limit_per_user=rate_limit_per_user)
+        return t, m
 
 
 class Category(GuildChannel):
