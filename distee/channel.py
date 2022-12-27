@@ -95,6 +95,23 @@ class GuildChannel(BaseChannel):
         return perms
 
 
+class ForumChannelTag:
+    __slots__ = [
+        'id',
+        'name',
+        'moderated',
+        'emoji_id',
+        'emoji_name'
+    ]
+
+    def __init__(self, **data):
+        self.id: int = int(data.get('id'))
+        self.name: str = data.get('name')
+        self.moderated: bool = data.get('moderated')
+        self.emoji_id: int = int(data.get('emoji_id')) if data.get('emoji_id') is not None else None
+        self.emoji_name: str = data.get('emoji_name')
+
+
 class ForumChannel(GuildChannel):
 
     __slots__ = [
@@ -103,7 +120,13 @@ class ForumChannel(GuildChannel):
     
     def __init__(self, **data):
         super(ForumChannel, self).__init__(**data)
-        self.available_tags = data.get('available_tags')
+        self.available_tags: Dict[int, ForumChannelTag] = {int(d['id']): ForumChannelTag(**d) for d in data.get('available_tags', [])}
+
+    def get_tag_by_name(self, name: str) -> Optional[ForumChannelTag]:
+        for t in self.available_tags.values():
+            if t.name == name:
+                return t
+        return None
 
     async def start_forum_thread(self,
                                  name: str,
@@ -114,7 +137,7 @@ class ForumChannel(GuildChannel):
                                  sticker_ids: Optional[List[int]] = None,
                                  files: Optional['File'] = None,
                                  flags: Optional[int] = None,
-                                 applied_tags: Optional[int] = None,
+                                 applied_tags: Optional[List[int]] = None,
                                  auto_archive_duration: Optional[int] = None,
                                  rate_limit_per_user: Optional[int] = None) -> 'Thread':
         t = await self._client.http.create_thread(Route('POST', '/channels/{channel_id}/threads', channel_id=self.id),
@@ -211,7 +234,7 @@ class Thread(GuildChannel, MessageableChannel):
         # TODO add invitable
         # TODO add create_timestamp
         self.locked: bool = data['thread_metadata'].get('locked')
-        self.applied_tags: List[int] = data.get('applied_tags')
+        self.applied_tags: List[int] = [int(t) for t in data.get('applied_tags', [])]
 
 
 class VoiceChannel(TextChannel):
