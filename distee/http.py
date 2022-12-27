@@ -10,11 +10,13 @@ from .errors import HTTPException, GatewayNotFound, Forbidden, NotFound, Discord
 import logging
 from .message import Message
 from .route import Route
+from .channel import get_channel
 
 if typing.TYPE_CHECKING:
     from .file import File
     from .base_client import BaseClient
     from .components import BaseComponent
+    from .channel import Thread
 
 
 async def get_json_or_str(response: ClientResponse):
@@ -215,6 +217,121 @@ class HTTPClient:
             })
         d = await self.request(route, form=form, files=files)
         return Message(**d, _client=self.client)
+
+    async def create_thread(self,
+                            route: Route,
+                            *,
+                            name: str,
+                            auto_archive_duration: Optional[int] = None,
+                            rate_limit_per_user: Optional[int] = None,
+                            applied_tags: Optional[List[int]] = None,
+                            files: List['File'] = None,
+                            content: Optional[str] = None,
+                            embeds: Optional[Dict] = None,
+                            nonce: Optional[str] = None,
+                            allowed_mentions: Optional[Dict] = None,
+                            message_reference: Optional[Dict] = None,
+                            stickers: Optional[List] = None,
+                            components: Optional[List[Union[dict, 'BaseComponent']]] = None,
+                            flags: Optional[int] = None) -> 'Thread':
+        if files is not None:
+            return await self.create_thread_multipart(route,
+                                                      name=name,
+                                                      auto_archive_duration=auto_archive_duration,
+                                                      rate_limit_per_user=rate_limit_per_user,
+                                                      applied_tags=applied_tags,
+                                                      files=files,
+                                                      content=content,
+                                                      embeds=embeds,
+                                                      nonce=nonce,
+                                                      allowed_mentions=allowed_mentions,
+                                                      message_reference=message_reference,
+                                                      stickers=stickers,
+                                                      components=components,
+                                                      flags=flags)
+
+        message_payload = {}
+        if content is not None:
+            message_payload['content'] = content
+        if message_reference is not None:
+            message_payload['message_reference'] = message_reference
+        if embeds is not None:
+            message_payload['embeds'] = embeds
+        if components is not None:
+            message_payload['components'] = utils.get_components(components)
+        if allowed_mentions is not None:
+            message_payload['allowed_mentions'] = allowed_mentions
+        if nonce is not None:
+            message_payload['nonce'] = nonce
+        if stickers is not None:
+            message_payload['sticker_ids'] = stickers
+        if flags is not None:
+            message_payload['flags'] = flags
+        payload = {
+            'name': name,
+            'message': message_payload
+        }
+        if auto_archive_duration is not None:
+            payload['auto_archive_duration'] = auto_archive_duration
+        if rate_limit_per_user is not None:
+            payload['rate_limit_per_user'] = rate_limit_per_user
+        if applied_tags is not None:
+            payload['applied_tags'] = applied_tags
+        d = await self.request(route, json=payload)
+        return get_channel(**d, _client=self.client)
+
+    async def create_thread_multipart(self,
+                                      route: Route,
+                                      *,
+                                      name: str,
+                                      auto_archive_duration: Optional[int] = None,
+                                      rate_limit_per_user: Optional[int] = None,
+                                      applied_tags: Optional[List[int]] = None,
+                                      files: List['File'] = None,
+                                      content: Optional[str] = None,
+                                      embeds: Optional[Dict] = None,
+                                      nonce: Optional[str] = None,
+                                      allowed_mentions: Optional[Dict] = None,
+                                      message_reference: Optional[Dict] = None,
+                                      stickers: Optional[List] = None,
+                                      components: Optional[List[Union[dict, 'BaseComponent']]] = None,
+                                      flags: Optional[int] = None) -> 'Thread':
+        payload = {}
+        form = []
+        if content is not None:
+            payload['content'] = content
+        if message_reference is not None:
+            payload['message_reference'] = message_reference
+        if embeds is not None:
+            payload['embeds'] = embeds
+        if components is not None:
+            payload['components'] = utils.get_components(components)
+        if allowed_mentions is not None:
+            payload['allowed_mentions'] = allowed_mentions
+        if nonce is not None:
+            payload['nonce'] = nonce
+        if stickers is not None:
+            payload['sticker_ids'] = stickers
+        if flags is not None:
+            payload['flags'] = flags
+        if files is not None:
+            if len(files) == 1:
+                payload['attachments'] = [{
+                    'id': 0,
+                    'description': files[0].description
+                }]
+        form.append({'name': 'payload_json', 'value': json.dumps(payload)})
+        if len(files) == 1:
+            file = files[0]
+            form.append({
+                'name': 'files[0]',
+                'value': file.fp,
+                'filename': file.filename,
+                'content_type': 'application/octet-stream',
+                'content_transfer_encoding': 'binary'
+            })
+        d = await self.request(route, form=form, files=files)
+        return get_channel(**d, _client=self.client)
 
     async def request(self,
                       route: Route,

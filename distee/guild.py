@@ -13,7 +13,7 @@ from .user import User
 from .role import Role
 
 if typing.TYPE_CHECKING:
-    from .channel import GuildChannel, TextChannel, VoiceChannel, Category, Thread
+    from .channel import GuildChannel, TextChannel, VoiceChannel, Category, Thread, ForumChannel
     from .client import Client
 
 
@@ -332,7 +332,8 @@ class Guild(Snowflake):
         self.nsfw_level: GuildNSFWLevel = GuildNSFWLevel(kwargs.get('nsfw_level'))
         self.stickers = []  # FIXME parse stickers
 
-    def get_channel(self, channel_id: Union[Snowflake, int]) -> Optional[Union['GuildChannel', 'TextChannel', 'VoiceChannel', 'Category', 'Thread']]:
+    def get_channel(self, channel_id: Union[Snowflake, int]) -> Optional[Union['GuildChannel', 'TextChannel', 'ForumChannel',
+                                                                               'VoiceChannel', 'Category', 'Thread']]:
         """Get Channel Object from cache if found, otherwise returns None"""
         ch = self._channels.get(snowflake_id(channel_id))
         if ch is None:

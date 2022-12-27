@@ -3,6 +3,7 @@ import logging
 import typing
 
 from . import abc
+from .components import BaseComponent
 from .flags import Permissions
 from .utils import Snowflake, snowflake_id
 from .enums import ChannelType
@@ -12,6 +13,7 @@ from .route import Route
 if typing.TYPE_CHECKING:
     from distee.message import Message
     from distee.guild import Member
+    from distee.file import File
 
 
 class BaseChannel(Snowflake):
@@ -92,10 +94,42 @@ class GuildChannel(BaseChannel):
             perms |= overwrite_member.allow
         return perms
 
+
 class ForumChannel(GuildChannel):
+
+    __slots__ = [
+        'available_tags'
+    ]
     
     def __init__(self, **data):
         super(ForumChannel, self).__init__(**data)
+        self.available_tags = data.get('available_tags')
+
+    async def start_forum_thread(self,
+                                 name: str,
+                                 content: Optional[str] = None,
+                                 embeds: Optional[List[dict]] = None,
+                                 allowed_mentions: Optional[dict] = None,
+                                 components: Optional[List[Union[dict, BaseComponent]]] = None,
+                                 sticker_ids: Optional[List[int]] = None,
+                                 files: Optional['File'] = None,
+                                 flags: Optional[int] = None,
+                                 applied_tags: Optional[int] = None,
+                                 auto_archive_duration: Optional[int] = None,
+                                 rate_limit_per_user: Optional[int] = None) -> 'Thread':
+        t = await self._client.http.create_thread(Route('POST', '/channels/{channel_id}/threads', channel_id=self.id),
+                                                  name=name,
+                                                  content=content,
+                                                  embeds=embeds,
+                                                  allowed_mentions=allowed_mentions,
+                                                  components=components,
+                                                  stickers=sticker_ids,
+                                                  files=files,
+                                                  flags=flags,
+                                                  applied_tags=applied_tags,
+                                                  auto_archive_duration=auto_archive_duration,
+                                                  rate_limit_per_user=rate_limit_per_user)
+        return t
 
 
 class Category(GuildChannel):
@@ -160,7 +194,8 @@ class Thread(GuildChannel, MessageableChannel):
         'archive_timestamp',
         'locked',
         'invitable',
-        'create_timestamp'
+        'create_timestamp',
+        'applied_tags'
     ]
 
     def __init__(self, **data):
@@ -176,6 +211,7 @@ class Thread(GuildChannel, MessageableChannel):
         # TODO add invitable
         # TODO add create_timestamp
         self.locked: bool = data['thread_metadata'].get('locked')
+        self.applied_tags: List[int] = data.get('applied_tags')
 
 
 class VoiceChannel(TextChannel):
