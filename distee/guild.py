@@ -7,7 +7,7 @@ from .utils import Snowflake, snowflake_id
 from typing import Optional, List, Dict, Union
 from .enums import GuildVerificationLevel, MessageNotificationLevel, ExplicitContentFilterLevel, MFALevel, PremiumTier
 from .enums import GuildNSFWLevel
-from .flags import SystemChannelFlags
+from .flags import SystemChannelFlags, Permissions
 from .channel import get_channel
 from .user import User
 from .role import Role
@@ -139,6 +139,18 @@ class Member(User):
             if highest is None or highest.position < r.position:
                 highest = r
         return highest
+
+    def get_calculated_permissions(self) -> Permissions:
+        if self.guild.owner_id.id == self.id:
+            return Permissions.all()
+        everyone_role = self.guild.get_role(self.guild.id)
+        perms: Permissions = Permissions(everyone_role.permissions.value)
+        member_roles = sorted(list(self.roles.values()), key=lambda d: d.position)
+        for role in member_roles:
+            perms |= role.permissions
+        if Permissions.ADMINISTRATOR in perms:
+            return Permissions.all()
+        return perms
 
 
 class VoiceState:
