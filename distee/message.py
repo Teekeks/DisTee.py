@@ -4,6 +4,7 @@ from .enums import MessageType
 from .utils import Snowflake
 from typing import Optional, Union, List
 from .route import Route
+import urllib.parse
 
 if typing.TYPE_CHECKING:
     from .channel import TextChannel
@@ -68,6 +69,15 @@ class Message(Snowflake):
         # TODO implement stickers
         # TODO implement position
         # FIXME implement all of the message object https://discord.com/developers/docs/resources/channel#message-object
+
+    async def add_reaction(self, emoji):
+        if isinstance(emoji, dict):
+            emoji = f'{emoji["name"]}:{emoji["id"]}'
+        emoji = urllib.parse.quote_plus(emoji)
+        await self._client.http.request(Route('PUT', '/channels/{channel_id}/messages/{message_id}/reactions/{reaction}/@me',
+                                              channel_id=self.channel_id,
+                                              message_id=self.id,
+                                              reaction=emoji))
 
     async def author(self):
         return await self.guild.get_member(self.author_id) if self.guild is not None else self._client.get_user(self.author_id)
