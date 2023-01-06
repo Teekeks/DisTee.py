@@ -244,7 +244,7 @@ class DiscordWebSocket:
 
         pass
 
-    async def identify(self):
+    async def identify(self, priority=False):
         d = {
             'op': self.IDENTIFY,
             'd': {
@@ -265,7 +265,7 @@ class DiscordWebSocket:
         }
         if self.client.activity is not None:
             d['d']['presence']['activities'] = [self.client.activity]
-        await self.send_as_json(d)
+        await self.send_as_json(d, ignore_rate_limit=priority)
 
     async def update_presence(self):
         d = {
@@ -314,7 +314,7 @@ class DiscordWebSocket:
         await self.poll_event()
 
         if not resume:
-            await self.identify()
+            await self.identify(True)
         else:
             await self.resume()
         # actually run stuff 🎉
