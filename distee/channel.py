@@ -266,11 +266,11 @@ def get_channel(**data):
     except ValueError:
         logging.warning(f'encountered unknown guild channel type {data.get("type")}, fallback to default')
         return BaseChannel(**data)
-    if t == ChannelType.GUILD_TEXT:
+    if t in (ChannelType.GUILD_TEXT, ChannelType.GUILD_NEWS):
         return TextChannel(**data)
     if t == ChannelType.GUILD_CATEGORY:
         return Category(**data)
-    if t == ChannelType.GUILD_VOICE:
+    if t in (ChannelType.GUILD_VOICE, ChannelType.GUILD_STAGE_VOICE):
         return VoiceChannel(**data)
     if t == ChannelType.GUILD_STORE:
         return GuildChannel(**data)
