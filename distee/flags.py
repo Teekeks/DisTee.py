@@ -63,6 +63,9 @@ class Intents:
     def add(self, intent: str):
         self.value += self._values[intent]
 
+    def values(self):
+        return [k for k, v in self._values.items() if self.value & v > 0]
+
 
 class SystemChannelFlags(IntFlag):
     SUPPRESS_JOIN_NOTIFICATIONS = 1 << 0
