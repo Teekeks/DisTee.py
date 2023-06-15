@@ -292,7 +292,7 @@ class Client(BaseClient):
         pass
 
     async def _on_guild_member_remove(self, data: dict):
-        member = self.member_cache.member_removed(int(data['guild_id']), int(data['user']['id']))
+        member = await self.member_cache.member_removed(int(data['guild_id']), int(data['user']['id']))
         for event in self._event_listener.get(Event.MEMBER_REMOVED.value, []):
             asyncio.ensure_future(event(member))
 
