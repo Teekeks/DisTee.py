@@ -1,3 +1,4 @@
+import datetime
 import json
 from typing import TYPE_CHECKING, Union
 
@@ -55,6 +56,10 @@ class Snowflake:
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    def to_creation_datetime(self) -> datetime.datetime:
+        timestamp = ((self.id >> 22) + 1420070400000) / 1000
+        return datetime.datetime.fromtimestamp(timestamp)
 
 
 def snowflake_id(s: Union[int, Snowflake]) -> int:
