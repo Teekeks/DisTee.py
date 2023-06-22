@@ -265,7 +265,10 @@ def get_channel(**data):
         t = ChannelType(data.get('type'))
     except ValueError:
         logging.warning(f'encountered unknown guild channel type {data.get("type")}, fallback to default')
-        return BaseChannel(**data)
+        if data.get('guild_id') is not None:
+            return GuildChannel(**data)
+        else:
+            return BaseChannel(**data)
     if t in (ChannelType.GUILD_TEXT, ChannelType.GUILD_NEWS):
         return TextChannel(**data)
     if t == ChannelType.GUILD_CATEGORY:
