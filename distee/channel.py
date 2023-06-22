@@ -276,6 +276,8 @@ def get_channel(**data):
         return GuildChannel(**data)
     if t == ChannelType.GUILD_FORUM:
         return ForumChannel(**data)
+    if t == ChannelType.GUILD_MEDIA:  # TODO make distinct
+        return ForumChannel(**data)
     if t in (ChannelType.GUILD_PUBLIC_THREAD, ChannelType.GUILD_PRIVATE_THREAD, ChannelType.GUILD_NEWS_THREAD):
         return Thread(**data)
     if t == ChannelType.GUILD_DIRECTORY:
