@@ -80,7 +80,7 @@ class Message(Snowflake):
                                               reaction=emoji))
 
     async def author(self):
-        return await self.guild.get_member(self.author_id) if self.guild is not None else self._client.get_user(self.author_id)
+        return await self.guild.obtain_member(self.author_id) if self.guild is not None else self._client.get_user(self.author_id)
 
     @property
     def jump_url(self):
