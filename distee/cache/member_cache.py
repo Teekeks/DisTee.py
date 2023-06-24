@@ -10,6 +10,10 @@ if TYPE_CHECKING:
 
 
 class NoMemberCache(BaseMemberCache):
+
+    async def total_cached_entries(self) -> int:
+        return 0
+
     async def get_guild_members(self, guild_id: Union[int, 'Snowflake']) -> List['Member']:
         return []
 
@@ -31,6 +35,9 @@ class NoMemberCache(BaseMemberCache):
 
 class RamMemberCache(BaseMemberCache):
     """Strategy: keep all members of a guild cached till they are removed from said guild"""
+
+    async def total_cached_entries(self) -> int:
+        return sum([len(x) for x in self.cache.values()])
 
     async def get_guild_members(self, guild_id: Union[int, 'Snowflake']) -> List['Member']:
         return self.cache.get(snowflake_id(guild_id), [])
@@ -72,6 +79,9 @@ class RamMemberCache(BaseMemberCache):
 
 class TimedRamMemberCache(BaseMemberCache):
     """Strategy: Cache all members who where active in the last x seconds"""
+
+    async def total_cached_entries(self) -> int:
+        return sum([len(x) for x in self.cache.values()])
 
     async def get_guild_members(self, guild_id: Union[int, 'Snowflake']) -> List['Member']:
         return self.cache.get(snowflake_id(guild_id), [])
