@@ -114,12 +114,12 @@ class TimedRamMemberCache(BaseMemberCache):
             for mid in list(gd):
                 t = gd[mid]
                 if t < tc:
-                    self.touched.get(gid, {}).pop(mid)
-                    self.cache.get(gid, {}).pop(mid)
+                    self.touched.get(gid, {}).pop(mid, None)
+                    self.cache.get(gid, {}).pop(mid, None)
 
     async def guild_left(self, guild_id: Union[int, 'Snowflake']):
-        self.cache.pop(snowflake_id(guild_id))
-        self.touched.pop(snowflake_id(guild_id))
+        self.cache.pop(snowflake_id(guild_id), None)
+        self.touched.pop(snowflake_id(guild_id), None)
 
     async def member_added(self, member: 'Member'):
         self._ensure_guild(member.guild.id)
