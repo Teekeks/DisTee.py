@@ -1,6 +1,4 @@
 import asyncio
-import datetime
-import logging
 import time
 from typing import Union, Optional, TYPE_CHECKING, List, Dict
 from distee.utils import snowflake_id
@@ -101,11 +99,11 @@ class TimedRamMemberCache(BaseMemberCache):
 
     def _cleanup(self):
         tc = int(time.time() * 1000) - (self.seconds_cached * 1000)
-        for gid, gd in self.touched.items():
+        for gid in list(self.touched):
+            gd = self.touched.get(gid, {})
             for mid in list(gd):
                 t = gd[mid]
                 if t < tc:
-                    logging.debug(f'member {mid} in {gid} cache cleared')
                     self.touched.get(gid, {}).pop(mid)
                     self.cache.get(gid, {}).pop(mid)
 
