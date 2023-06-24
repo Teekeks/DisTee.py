@@ -293,6 +293,9 @@ class Client(BaseClient):
 
     async def _on_guild_member_remove(self, data: dict):
         member = await self.member_cache.member_removed(int(data['guild_id']), int(data['user']['id']))
+        guild = self.get_guild(int(data['guild_id']))
+        if guild is not None:
+            guild.member_count -= 1
         for event in self._event_listener.get(Event.MEMBER_REMOVED.value, []):
             asyncio.ensure_future(event(member))
 
@@ -307,6 +310,8 @@ class Client(BaseClient):
     async def _on_member_join(self, data: dict):
         gid = int(data.get('guild_id'))
         guild = self.get_guild(gid)
+        if guild is not None:
+            guild.member_count += 1
         member = Member(**data, _client=self, _guild=guild)
         await self.member_cache.member_added(member)
         for event in self._event_listener.get(Event.MEMBER_JOINED.value, []):
