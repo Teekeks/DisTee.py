@@ -19,6 +19,7 @@ class Message(Snowflake):
         'guild_id',
         'channel_id',
         'author_id',
+        'author_is_webhook',
         'pinned',
         'flags',
         'guild',
@@ -38,6 +39,7 @@ class Message(Snowflake):
         self.guild_id: Snowflake = Snowflake(id=args.get('guild_id'))
         self.channel_id: Snowflake = Snowflake(id=args.get('channel_id'))
         self.author_id: Snowflake = Snowflake(id=args.get('author', {}).get('id'))
+        self.author_is_webhook: bool = args.get('author', {}).get('discriminator', '') == '0000'
         self.pinned: bool = args.get('pinned')
         # TODO: fix flags to use message flags
         self.flags = args.get('flags')
