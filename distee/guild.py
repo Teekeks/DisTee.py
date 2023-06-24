@@ -382,4 +382,4 @@ class Guild(Snowflake):
         await self._client.http.request(Route('DELETE', '/users/@me/guilds/{guild_id}', guild_id=self.id))
 
     async def get_self(self) -> Member:
-        return await self._client.member_cache.get_member(self.id, self._client.user.id)
+        return await self.obtain_member(self._client.user.id)
