@@ -112,8 +112,7 @@ class TimedRamMemberCache(BaseMemberCache):
         for gid in list(self.touched):
             gd = self.touched.get(gid, {})
             for mid in list(gd):
-                t = gd[mid]
-                if t < tc:
+                if gd[mid] < tc:
                     self.touched.get(gid, {}).pop(mid, None)
                     self.cache.get(gid, {}).pop(mid, None)
 
