@@ -15,6 +15,7 @@ from distee.interaction import Interaction
 from distee.route import Route
 from distee.user import User
 from distee.utils import command_lists_equal, Snowflake
+from distee.entitlement import Entitlement
 import re
 
 
@@ -179,6 +180,20 @@ class BaseClient:
 
     def get_user(self, s: Union[Snowflake, int]) -> Optional[User]:
         return None
+
+    async def get_entitlements(self, exclude_ended: bool) -> List[Entitlement]:
+        # TODO: implement all query params (see https://discord.com/developers/docs/monetization/entitlements#list-entitlements)
+        data = await self.http.request(Route('GET', '/applications/{app_id}/entitlements', app_id=self.application.id),
+                                       exclude_ended=exclude_ended)
+        return [Entitlement(**d) for d in data]
+
+    async def create_test_entitlement(self, sku_id: int, owner_id: int, owner_type: int):
+        await self.http.request(Route('POST', '/applications/{app_id}/entitlements', app_id=self.application.id),
+                                sku_id=sku_id, owner_id=owner_id, owner_type=owner_type)
+
+    async def delete_test_entitlement(self, entitlement_id: int):
+        await self.http.request(Route('DELETE', '/applications/{app_id}/entitlements/{entitlement_id}',
+                                      app_id=self.application, entitlement_id=entitlement_id))
 
 ######################################################################################################################################################
 # DECORATOR

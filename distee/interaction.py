@@ -13,6 +13,7 @@ from .guild import Member, Guild
 from .user import User
 from .message import Message
 from .channel import BaseChannel, get_channel
+from .entitlement import Entitlement
 
 if typing.TYPE_CHECKING:
     from .file import File
@@ -89,6 +90,7 @@ class Interaction(Snowflake):
             if data.get('message') is not None else None
         self.locale: Optional[str] = data.get('locale')
         self.guild_locale: Optional[str] = data.get('guild_locale')
+        self.entitlements: List[Entitlement] = [Entitlement(**d) for d in data.get('entitlements', [])]
 
     async def defer_update_message(self):
         """ACK component interaction now and edit message later"""
@@ -146,6 +148,17 @@ class Interaction(Snowflake):
                         'nonce': nonce,
                         'allowed_mentions': allowed_mentions
                     }.items() if v is not None}}
+        await self._client.http.request(Route('POST',
+                                              '/interactions/{interaction_id}/{interaction_token}/callback',
+                                              interaction_id=self.id,
+                                              interaction_token=self.token),
+                                        json=json)
+
+    async def premium_required(self):
+        json = {
+            'type': InteractionResponseType.PREMIUM_REQUIRED.value,
+            'data': {}
+        }
         await self._client.http.request(Route('POST',
                                               '/interactions/{interaction_id}/{interaction_token}/callback',
                                               interaction_id=self.id,
