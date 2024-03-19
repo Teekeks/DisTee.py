@@ -59,7 +59,7 @@ class ChannelType(IntEnum):
 
 class IntegrationType(IntEnum):
     GUILD_INSTALL = 0
-    USER_INSTALL = 0
+    USER_INSTALL = 1
 
 
 class InteractionContextType(IntEnum):
