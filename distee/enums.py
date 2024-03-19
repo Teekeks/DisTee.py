@@ -57,6 +57,17 @@ class ChannelType(IntEnum):
     GUILD_MEDIA = 16
 
 
+class IntegrationType(IntEnum):
+    GUILD_INSTALL = 0
+    USER_INSTALL = 0
+
+
+class InteractionContextType(IntEnum):
+    GUILD = 0
+    BOT_DM = 1
+    PRIVATE_CHANNEL = 2
+
+
 class ApplicationCommandType(IntEnum):
     CHAT_INPUT = 1
     USER = 2

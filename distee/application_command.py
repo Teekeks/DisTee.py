@@ -1,5 +1,5 @@
 from .utils import Snowflake
-from .enums import ApplicationCommandType, ApplicationCommandOptionType, ChannelType
+from .enums import ApplicationCommandType, ApplicationCommandOptionType, ChannelType, IntegrationType, InteractionContextType
 from typing import Optional, List, Union, TYPE_CHECKING
 from .guild import Guild
 from .route import Route
@@ -63,6 +63,7 @@ class ApplicationCommandOption:
         self.description = data.get('description')
         self.required = data.get('required', False)
         self.channel_types = data.get('channel_types')
+
         if data.get('options') is None or len(data.get('options')) == 0:
             self.options: List[ApplicationCommandOption] = []
         elif isinstance(data.get('options')[0], ApplicationCommandOption):
@@ -132,8 +133,12 @@ class ApplicationCommand(Snowflake):
         'default_member_permissions',
         'version',
         'options',
-        'callback'
+        'callback',
+        'integration_types',
+        'contexts'
     ]
+    integration_types: List[IntegrationType]
+    contexts: List[InteractionContextType]
 
     def __init__(self, **data):
         super(ApplicationCommand, self).__init__(**data)
@@ -141,7 +146,8 @@ class ApplicationCommand(Snowflake):
         self.application_id: Snowflake = Snowflake(id=data.get('application_id'))
         self.guild_id: Optional[Snowflake] = Snowflake(id=data.get('guild_id')) \
             if data.get('guild_id') is not None else None
-
+        self.integration_types = data.get('integration_types')
+        self.contexts = data.get('contexts')
         if self._client is not None:
             self.guild: Optional[Guild] = self._client.get_guild(self.guild_id) if self.guild_id is not None else None
         self.name: str = data.get('name')
@@ -174,6 +180,10 @@ class ApplicationCommand(Snowflake):
         if self.type in (ApplicationCommandType.USER, ApplicationCommandType.MESSAGE):
             ret.pop('description', None)
             ret.pop('options', None)
+        if self.integration_types is not None and len(self.integration_types) > 0:
+            ret['integration_types'] = [i.value for i in self.integration_types]
+        if self.contexts is not None and len(self.contexts) > 0:
+            ret['contexts'] = [i.value for i in self.contexts]
         return ret
 
     def is_global(self):
@@ -212,6 +222,10 @@ class ApplicationCommand(Snowflake):
         if self.type != other.type:
             return False
         if self.name != other.name:
+            return False
+        if self.integration_types != other.integration_types:
+            return False
+        if self.contexts != other.contexts:
             return False
         if (self.description if self.description is not None else '') != (other.description if other.description is not None else ''):
             return False
