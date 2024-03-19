@@ -6,7 +6,7 @@ from .components import Modal
 from .errors import WrongInteractionTypeException
 from .route import Route
 from .utils import Snowflake, snowflake_or_none, get_json_from_dict, get_components
-from .enums import InteractionType, ApplicationCommandType, InteractionResponseType, ComponentType
+from .enums import InteractionType, ApplicationCommandType, InteractionResponseType, ComponentType, InteractionContextType
 from .flags import InteractionCallbackFlags
 from typing import Optional, List, Dict, Union
 from .guild import Member, Guild
@@ -76,6 +76,7 @@ class Interaction(Snowflake):
         self.guild_id: Optional[Snowflake] = snowflake_or_none(data.get('guild_id'))
         self.guild: Optional[Guild] = self._client.get_guild(self.guild_id) if self.guild_id is not None else None
         self.channel_id: Optional[Snowflake] = snowflake_or_none(data.get('channel_id'))
+        self.context: Optional[InteractionContextType] = InteractionContextType(data.get('context')) if data.get('context') is not None else None
         self.member: Optional[Member] = Member(**data.get('member'),
                                                _client=self._client,
                                                _guild=self._client.get_guild(self.guild_id)) \
